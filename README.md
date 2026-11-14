@@ -75,6 +75,9 @@ flutter pub get
 flutter run
 ```
 
+The app icon is generated from `assets/icon/billbox_icon.svg` — see
+[`assets/icon/README.md`](assets/icon/README.md) to change it.
+
 ## Status
 
 Early development — initial Flutter project set up, features landing one at a time.
