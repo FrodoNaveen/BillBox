@@ -1,11 +1,11 @@
 {
-    "name": "bill_box",
-    "short_name": "bill_box",
+    "name": "BillBox",
+    "short_name": "BillBox",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#4C21A8",
     "theme_color": "#4C21A8",
-    "description": "A new Flutter project.",
+    "description": "Keep your bills, warranties and important documents in one place.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
