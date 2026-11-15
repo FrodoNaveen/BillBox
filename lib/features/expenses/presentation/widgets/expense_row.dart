@@ -15,6 +15,10 @@ class ExpenseRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final hasNote = expense.note?.trim().isNotEmpty == true;
+    final subtitle = <String>[
+      if (hasNote) expense.category,
+      if (expense.isFromBill) 'from a saved bill',
+    ].join(' · ');
 
     return Material(
       color: scheme.surfaceContainerLowest,
@@ -59,39 +63,29 @@ class ExpenseRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
+                    // One line, ellipsised: a note plus "from a saved bill"
+                    // is more than a narrow row can hold.
                     Row(
                       children: [
-                        if (hasNote)
-                          Text(
-                            expense.category,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
                         if (expense.isFromBill) ...[
-                          if (hasNote)
-                            Text(
-                              ' · ',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
                           Icon(
                             Icons.receipt_long_outlined,
                             size: 13,
                             color: scheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            'from a saved bill',
+                        ],
+                        Expanded(
+                          child: Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 12,
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ],

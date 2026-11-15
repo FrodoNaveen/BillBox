@@ -5,6 +5,7 @@ import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../expenses/presentation/widgets/spending_card.dart';
 import '../../../items/presentation/providers/items_provider.dart';
+import '../../../items/presentation/screens/item_detail_screen.dart';
 import '../widgets/category_tile.dart';
 import '../widgets/expiring_item_tile.dart';
 import '../widgets/summary_card.dart';
@@ -25,10 +26,10 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onOpenSearch;
   final VoidCallback onOpenReminders;
 
-  void _showNotReady(BuildContext context, String what) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$what is not built yet.')));
+  void _openItem(BuildContext context, String itemId) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => ItemDetailScreen(itemId: itemId)),
+    );
   }
 
   @override
@@ -101,7 +102,9 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 10),
               child: ExpiringItemTile(
                 item: item,
-                onTap: () => _showNotReady(context, 'Item details'),
+                onTap: item.itemId == null
+                    ? null
+                    : () => _openItem(context, item.itemId!),
               ),
             ),
           const SizedBox(height: 8),

@@ -1,4 +1,6 @@
 import 'package:billbox/features/search/data/item_search.dart';
+import 'package:billbox/features/items/data/item_category_catalog.dart';
+import 'package:billbox/features/items/data/sample_items.dart';
 import 'package:billbox/features/search/data/search_sample_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -100,9 +102,9 @@ void main() {
   });
 
   test('the sample catalogue covers every chip category', () {
-    for (final name in searchCategories) {
+    for (final name in itemCategories) {
       expect(
-        sampleSearchItems.any((item) => item.category == name),
+        sampleBillItems.any((item) => item.category == name),
         isTrue,
         reason: 'no sample item in $name',
       );
