@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../../data/home_sample_data.dart';
+import '../../../items/presentation/providers/items_provider.dart';
 import '../widgets/category_tile.dart';
 import '../widgets/expiring_item_tile.dart';
 import '../widgets/summary_card.dart';
 
 /// The dashboard: what is saved, what expires next, and the categories to
-/// browse. The numbers and rows come from [home_sample_data] until the items
-/// feature lands.
+/// browse. The numbers and rows come from [ItemsProvider], which stands in
+/// the sample catalogue until the first item is saved and says so on screen.
 ///
 /// It is one tab of the app shell, so the search and bell actions hand control
 /// back to the shell instead of pushing a route.
@@ -22,14 +23,15 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onOpenReminders;
 
   void _showNotReady(BuildContext context, String what) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$what is not built yet.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$what is not built yet.')));
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final items = context.watch<ItemsProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -45,7 +47,10 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.search_rounded),
             tooltip: 'Search items',
           ),
-          _BellButton(count: sampleExpiringSoon, onPressed: onOpenReminders),
+          _BellButton(
+            count: items.expiringSoonCount,
+            onPressed: onOpenReminders,
+          ),
           const SizedBox(width: 4),
         ],
       ),
@@ -54,22 +59,23 @@ class HomeScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: SummaryCard(
-                  value: sampleSavedItems,
+                  value: items.savedCount,
                   label: 'items saved',
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: SummaryCard(
-                  value: sampleExpiringSoon,
+                  value: items.expiringSoonCount,
                   label: 'expiring soon',
                   highlight: true,
                 ),
               ),
             ],
           ),
+          if (items.isShowingSamples) const _SampleDataNote(),
           const SizedBox(height: 18),
           _SectionHeader(
             title: 'Expiring soon',
@@ -77,7 +83,7 @@ class HomeScreen extends StatelessWidget {
             onAction: onOpenReminders,
           ),
           const SizedBox(height: 10),
-          for (final item in sampleExpiringItems)
+          for (final item in items.expiringItems)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: ExpiringItemTile(
@@ -88,22 +94,22 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 8),
           const _SectionHeader(title: 'Categories'),
           const SizedBox(height: 10),
-          for (int i = 0; i < sampleCategories.length; i += 2)
+          for (int i = 0; i < items.categories.length; i += 2)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
                   Expanded(
                     child: CategoryTile(
-                      category: sampleCategories[i],
+                      category: items.categories[i],
                       onTap: onOpenSearch,
                     ),
                   ),
                   const SizedBox(width: 10),
-                  if (i + 1 < sampleCategories.length)
+                  if (i + 1 < items.categories.length)
                     Expanded(
                       child: CategoryTile(
-                        category: sampleCategories[i + 1],
+                        category: items.categories[i + 1],
                         onTap: onOpenSearch,
                       ),
                     )
@@ -112,6 +118,37 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Said plainly while the dashboard is still showing the sample catalogue,
+/// so the numbers above are never mistaken for the user's own.
+class _SampleDataNote extends StatelessWidget {
+  const _SampleDataNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, left: 4),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 15,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'Sample items — add your first bill with the + button.',
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            ),
+          ),
         ],
       ),
     );

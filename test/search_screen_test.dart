@@ -1,16 +1,26 @@
+import 'package:billbox/core/storage/key_value_store.dart';
 import 'package:billbox/core/theme/app_theme.dart';
+import 'package:billbox/features/items/data/items_repository.dart';
+import 'package:billbox/features/items/presentation/providers/items_provider.dart';
 import 'package:billbox/features/search/presentation/screens/search_screen.dart';
 import 'package:billbox/features/search/presentation/widgets/search_result_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 Future<void> _pumpSearch(WidgetTester tester) async {
   await tester.binding.setSurfaceSize(const Size(390, 844));
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
+  // Nothing is saved, so the tab falls back to the sample catalogue.
   await tester.pumpWidget(
-    MaterialApp(theme: AppTheme.light(), home: const SearchScreen()),
+    ChangeNotifierProvider<ItemsProvider>(
+      create: (_) =>
+          ItemsProvider(repository: ItemsRepository(InMemoryStore()))..load(),
+      child: MaterialApp(theme: AppTheme.light(), home: const SearchScreen()),
+    ),
   );
+  await tester.pumpAndSettle();
 }
 
 void main() {

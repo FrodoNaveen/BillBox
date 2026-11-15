@@ -2,6 +2,7 @@ import 'package:billbox/app.dart';
 import 'package:billbox/core/storage/key_value_store.dart';
 import 'package:billbox/features/auth/data/auth_local_data_source.dart';
 import 'package:billbox/features/auth/data/auth_repository.dart';
+import 'package:billbox/features/items/data/items_repository.dart';
 import 'package:billbox/features/settings/data/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,7 @@ void main() {
   BillBoxApp appWith(AuthRepository repository) => BillBoxApp(
     authRepository: repository,
     settingsRepository: SettingsRepository(InMemoryStore()),
+    itemsRepository: ItemsRepository(InMemoryStore()),
   );
 
   /// The screens are designed for a phone, so test them at phone size

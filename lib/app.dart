@@ -6,6 +6,8 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/presentation/screens/signup_screen.dart';
+import 'features/items/data/items_repository.dart';
+import 'features/items/presentation/providers/items_provider.dart';
 import 'features/settings/data/settings_repository.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
 import 'features/splash/presentation/screens/auth_gate.dart';
@@ -15,10 +17,12 @@ class BillBoxApp extends StatelessWidget {
     super.key,
     required this.authRepository,
     required this.settingsRepository,
+    required this.itemsRepository,
   });
 
   final AuthRepository authRepository;
   final SettingsRepository settingsRepository;
+  final ItemsRepository itemsRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +36,10 @@ class BillBoxApp extends StatelessWidget {
         ChangeNotifierProvider<SettingsProvider>(
           create: (_) =>
               SettingsProvider(repository: settingsRepository)..load(),
+        ),
+        Provider<ItemsRepository>.value(value: itemsRepository),
+        ChangeNotifierProvider<ItemsProvider>(
+          create: (_) => ItemsProvider(repository: itemsRepository)..load(),
         ),
       ],
       child: MaterialApp(

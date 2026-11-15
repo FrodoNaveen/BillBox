@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/choice_pill.dart';
 import '../../data/item_search.dart';
 import '../../data/search_sample_data.dart';
 
@@ -29,14 +30,14 @@ class SearchFilterBar extends StatelessWidget {
         children: [
           _WindowPill(window: window, onChanged: onWindowChanged),
           const SizedBox(width: 8),
-          FilterPill(
+          ChoicePill(
             label: 'All',
             selected: category == null,
             onTap: () => onCategoryChanged(null),
           ),
           for (final name in searchCategories) ...[
             const SizedBox(width: 8),
-            FilterPill(
+            ChoicePill(
               label: name,
               selected: category == name,
               // Tapping the selected chip again clears it.
@@ -44,64 +45,6 @@ class SearchFilterBar extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-/// One chip: filled with a tick when it is on, outlined when it is off.
-class FilterPill extends StatelessWidget {
-  const FilterPill({
-    super.key,
-    required this.label,
-    required this.selected,
-    this.onTap,
-    this.trailing,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback? onTap;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final foreground = selected
-        ? scheme.onPrimaryContainer
-        : scheme.onSurfaceVariant;
-
-    return Material(
-      color: selected ? scheme.primaryContainer : Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: selected ? null : Border.all(color: scheme.outline),
-          ),
-          child: Row(
-            children: [
-              if (selected) ...[
-                Icon(Icons.check_rounded, size: 16, color: foreground),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-                  color: foreground,
-                ),
-              ),
-              if (trailing != null) ...[const SizedBox(width: 5), trailing!],
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -128,7 +71,7 @@ class _WindowPill extends StatelessWidget {
         for (final option in ExpiryWindow.values)
           PopupMenuItem<ExpiryWindow>(value: option, child: Text(option.label)),
       ],
-      child: FilterPill(
+      child: ChoicePill(
         label: window.chipLabel,
         selected: selected,
         trailing: Icon(

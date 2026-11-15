@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../items/presentation/providers/items_provider.dart';
 import '../../data/item_search.dart';
-import '../../data/search_sample_data.dart';
 import '../widgets/search_filter_bar.dart';
 import '../widgets/search_pill_field.dart';
 import '../widgets/search_result_tile.dart';
 
 /// The search tab: a query, a category chip, an expiry window, and the rows
-/// that match. Everything filters as the user types; the rows come from
-/// [sampleSearchItems] until the items feature lands.
+/// that match. Everything filters as the user types, over whatever
+/// [ItemsProvider] holds — the saved items, or the sample catalogue while
+/// nothing has been saved yet.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -53,7 +55,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final results = searchItems(
-      source: sampleSearchItems,
+      source: context.watch<ItemsProvider>().searchItems,
       query: _query,
       category: _category,
       window: _window,

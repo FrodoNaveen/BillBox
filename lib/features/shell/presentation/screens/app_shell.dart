@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../account/presentation/screens/account_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
-import '../../../items/presentation/screens/add_item_screen.dart';
+import '../../../items/presentation/screens/capture_bill_screen.dart';
 import '../../../reminders/presentation/screens/reminders_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
 import '../widgets/billbox_nav_bar.dart';
@@ -24,9 +24,9 @@ class _AppShellState extends State<AppShell> {
     setState(() => _current = tab);
   }
 
-  void _openAddItem() {
+  void _openCapture() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const AddItemScreen()),
+      MaterialPageRoute<void>(builder: (_) => const CaptureBillScreen()),
     );
   }
 
@@ -48,7 +48,7 @@ class _AppShellState extends State<AppShell> {
       bottomNavigationBar: BillBoxNavBar(
         current: _current,
         onSelect: _select,
-        onAdd: _openAddItem,
+        onAdd: _openCapture,
       ),
     );
   }
