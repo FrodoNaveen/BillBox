@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/screens/login_screen.dart';
-import '../../../home/presentation/screens/home_screen.dart';
+import '../../../shell/presentation/screens/app_shell.dart';
 
 /// Decides what the app opens on: a brief splash while local storage is read,
-/// then either the login screen or the dashboard.
+/// then either the login screen or the tabbed app shell.
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -18,7 +18,7 @@ class AuthGate extends StatelessWidget {
       case AuthStatus.unknown:
         return const _SplashView();
       case AuthStatus.authenticated:
-        return const HomeScreen();
+        return const AppShell();
       case AuthStatus.unauthenticated:
         return const LoginScreen();
     }

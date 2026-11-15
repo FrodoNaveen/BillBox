@@ -89,7 +89,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Log in'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Hi Naveen'), findsOneWidget);
+    expect(find.text('Expiring soon'), findsOneWidget);
   });
 
   testWidgets('a saved session skips the login screen', (tester) async {
@@ -104,7 +104,7 @@ void main() {
     await tester.pumpWidget(BillBoxApp(authRepository: repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('Hi Naveen'), findsOneWidget);
+    expect(find.text('Expiring soon'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Log in'), findsNothing);
   });
 
@@ -120,7 +120,9 @@ void main() {
     await tester.pumpWidget(BillBoxApp(authRepository: repository));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Log out'));
+    await tester.tap(find.byTooltip('Account'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Log out'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Log out'));
     await tester.pumpAndSettle();
@@ -165,7 +167,7 @@ void main() {
     await tester.tap(createAccountButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('Hi Naveen'), findsOneWidget);
+    expect(find.text('Expiring soon'), findsOneWidget);
     expect(
       await store.read(AuthLocalDataSource.sessionKey),
       isNotNull,
