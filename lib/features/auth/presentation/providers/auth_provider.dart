@@ -61,6 +61,20 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
+  /// Saves edited profile details. Returns false and sets [errorMessage]
+  /// when the write fails, like the other form actions here.
+  Future<bool> updateProfile({required String name, String? phone}) async {
+    final current = _user;
+    if (current == null) return false;
+    return _submit(
+      () => _repository.updateProfile(
+        userId: current.id,
+        name: name,
+        phone: phone,
+      ),
+    );
+  }
+
   Future<void> logOut() async {
     await _repository.logOut();
     _user = null;

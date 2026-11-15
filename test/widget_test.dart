@@ -2,12 +2,19 @@ import 'package:billbox/app.dart';
 import 'package:billbox/core/storage/key_value_store.dart';
 import 'package:billbox/features/auth/data/auth_local_data_source.dart';
 import 'package:billbox/features/auth/data/auth_repository.dart';
+import 'package:billbox/features/settings/data/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   AuthRepository repositoryWith(InMemoryStore store) =>
       AuthRepository(dataSource: AuthLocalDataSource(store));
+
+  /// The app under test, with settings kept in memory.
+  BillBoxApp appWith(AuthRepository repository) => BillBoxApp(
+    authRepository: repository,
+    settingsRepository: SettingsRepository(InMemoryStore()),
+  );
 
   /// The screens are designed for a phone, so test them at phone size
   /// instead of the default 800x600 test window.
@@ -20,9 +27,7 @@ void main() {
     tester,
   ) async {
     await usePhoneSurface(tester);
-    await tester.pumpWidget(
-      BillBoxApp(authRepository: repositoryWith(InMemoryStore())),
-    );
+    await tester.pumpWidget(appWith(repositoryWith(InMemoryStore())));
     await tester.pumpAndSettle();
 
     expect(find.text('Capture once. Get reminded in time.'), findsOneWidget);
@@ -31,9 +36,7 @@ void main() {
 
   testWidgets('a bad email is caught before any storage call', (tester) async {
     await usePhoneSurface(tester);
-    await tester.pumpWidget(
-      BillBoxApp(authRepository: repositoryWith(InMemoryStore())),
-    );
+    await tester.pumpWidget(appWith(repositoryWith(InMemoryStore())));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).first, 'not-an-email');
@@ -55,7 +58,7 @@ void main() {
     );
     await repository.logOut();
 
-    await tester.pumpWidget(BillBoxApp(authRepository: repository));
+    await tester.pumpWidget(appWith(repository));
     await tester.pumpAndSettle();
 
     final fields = find.byType(TextFormField);
@@ -80,7 +83,7 @@ void main() {
     );
     await repository.logOut();
 
-    await tester.pumpWidget(BillBoxApp(authRepository: repository));
+    await tester.pumpWidget(appWith(repository));
     await tester.pumpAndSettle();
 
     final fields = find.byType(TextFormField);
@@ -101,7 +104,7 @@ void main() {
       password: 'billbox2026',
     );
 
-    await tester.pumpWidget(BillBoxApp(authRepository: repository));
+    await tester.pumpWidget(appWith(repository));
     await tester.pumpAndSettle();
 
     expect(find.text('Expiring soon'), findsOneWidget);
@@ -117,7 +120,7 @@ void main() {
       password: 'billbox2026',
     );
 
-    await tester.pumpWidget(BillBoxApp(authRepository: repository));
+    await tester.pumpWidget(appWith(repository));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('Account'));
@@ -135,7 +138,7 @@ void main() {
   ) async {
     await usePhoneSurface(tester);
     final store = InMemoryStore();
-    await tester.pumpWidget(BillBoxApp(authRepository: repositoryWith(store)));
+    await tester.pumpWidget(appWith(repositoryWith(store)));
     await tester.pumpAndSettle();
 
     final createAccountLink = find.widgetWithText(TextButton, 'Create account');

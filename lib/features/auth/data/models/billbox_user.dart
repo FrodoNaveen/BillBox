@@ -52,12 +52,19 @@ class BillBoxUser {
         DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
   );
 
-  BillBoxUser copyWith({String? name, String? email, String? phone}) {
+  /// [clearPhone] is how the profile form removes a number: passing null for
+  /// [phone] alone cannot tell "leave it" from "delete it".
+  BillBoxUser copyWith({
+    String? name,
+    String? email,
+    String? phone,
+    bool clearPhone = false,
+  }) {
     return BillBoxUser(
       id: id,
       name: name ?? this.name,
       email: email ?? this.email,
-      phone: phone ?? this.phone,
+      phone: clearPhone ? null : (phone ?? this.phone),
       createdAt: createdAt,
     );
   }

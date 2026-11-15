@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/privacy_note.dart';
+import '../../../search/data/search_sample_data.dart';
+import '../../../settings/data/data_export.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../settings/presentation/screens/profile_details_screen.dart';
+import '../../../settings/presentation/screens/reminder_settings_screen.dart';
+import '../../../settings/presentation/widgets/settings_tile.dart';
 
-/// Account tab. The rows below the profile card are placeholders, but the
-/// profile details and log out are real — log out used to live on the
-/// dashboard app bar.
+/// The account tab, which doubles as the settings hub: who is signed in, the
+/// settings rows, what can be done with the data, and log out.
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
@@ -37,93 +43,95 @@ class AccountScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _export(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final json = buildExportJson(
+      items: sampleSearchItems,
+      at: DateTime.now(),
+      accountEmail: context.read<AuthProvider>().user?.email,
+    );
+
+    await Clipboard.setData(ClipboardData(text: json));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          '${sampleSearchItems.length} items copied to the clipboard as JSON.',
+        ),
+      ),
+    );
+  }
+
+  void _open(BuildContext context, Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final user = context.watch<AuthProvider>().user;
+    final settings = context.watch<SettingsProvider>().settings;
+
+    final reminderSummary = !settings.remindersEnabled
+        ? 'Off — nothing will be sent'
+        : settings.leadDays.isEmpty
+        ? 'On, but no lead time is chosen'
+        : '${ReminderSettingsScreen.leadDaysSummary(settings.leadDays)} · '
+              '${TimeOfDay(hour: settings.reminderHour, minute: settings.reminderMinute).format(context)}';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: scheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: scheme.primary,
-                  child: Text(
-                    user?.initials ?? '?',
-                    style: TextStyle(
-                      color: scheme.onPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hi ${user?.firstName ?? 'there'}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: scheme.onSecondaryContainer,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        user?.email ?? '',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: scheme.onSecondaryContainer,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          _ProfileCard(
+            initials: user?.initials ?? '?',
+            greeting: 'Hi ${user?.firstName ?? 'there'}',
+            email: user?.email ?? '',
           ),
-          const SizedBox(height: 20),
-          const _SettingRow(
+          const SizedBox(height: 22),
+          const SettingsSectionLabel('Settings'),
+          SettingsTile(
             icon: Icons.person_outline_rounded,
             title: 'Profile details',
-            subtitle: 'Name, email and phone',
+            subtitle: user?.phone == null
+                ? 'Name and mobile number'
+                : '${user?.name} · ${user?.phone}',
+            onTap: () => _open(context, const ProfileDetailsScreen()),
           ),
           const SizedBox(height: 10),
-          const _SettingRow(
+          SettingsTile(
             icon: Icons.notifications_none_rounded,
             title: 'Reminder settings',
-            subtitle: 'When and how often to be nudged',
+            subtitle: reminderSummary,
+            onTap: () => _open(context, const ReminderSettingsScreen()),
           ),
           const SizedBox(height: 10),
-          const _SettingRow(
+          const SettingsTile(
             icon: Icons.lock_outline_rounded,
             title: 'App lock',
-            subtitle: 'Face unlock or a PIN',
+            subtitle: 'Face unlock or a PIN before BillBox opens',
+            enabled: false,
+            trailing: SoonBadge(),
           ),
-          const SizedBox(height: 10),
-          const _SettingRow(
+          const SizedBox(height: 22),
+          const SettingsSectionLabel('Your data'),
+          SettingsTile(
             icon: Icons.ios_share_rounded,
             title: 'Export data',
-            subtitle: 'A copy of every item on this phone',
+            subtitle: 'Copy every item as JSON',
+            onTap: () => _export(context),
+            trailing: const Icon(Icons.content_copy_rounded, size: 20),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
           OutlinedButton.icon(
             onPressed: () => _confirmLogOut(context),
             icon: const Icon(Icons.logout_rounded, size: 20),
             label: const Text('Log out'),
+          ),
+          const SizedBox(height: 20),
+          const PrivacyNote(
+            text:
+                'Your bills, photos and settings never leave this phone. '
+                'Nothing is uploaded anywhere.',
           ),
         ],
       ),
@@ -131,81 +139,68 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-/// A settings row that is drawn but not wired up yet.
-class _SettingRow extends StatelessWidget {
-  const _SettingRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
+/// Who is signed in, on the tonal card at the top of the tab.
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
+    required this.initials,
+    required this.greeting,
+    required this.email,
   });
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
+  final String initials;
+  final String greeting;
+  final String email;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Material(
-      color: scheme.surfaceContainerLowest,
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$title is not built yet.')),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.cardBorder),
-            borderRadius: BorderRadius.circular(18),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: scheme.primary,
+            child: Text(
+              initials,
+              style: TextStyle(
+                color: scheme.onPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(14),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  greeting,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: scheme.onSecondaryContainer,
+                  ),
                 ),
-                child: Icon(icon, size: 22, color: scheme.onSurfaceVariant),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 3),
+                Text(
+                  email,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: scheme.onSecondaryContainer,
+                  ),
                 ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 22,
-                color: scheme.onSurfaceVariant,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

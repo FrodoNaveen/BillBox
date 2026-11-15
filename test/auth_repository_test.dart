@@ -96,6 +96,59 @@ void main() {
     expect(user.name, 'Naveen');
   });
 
+  test('updating the profile keeps the login and the password', () async {
+    final user = await repository.signUp(
+      name: 'Naveen',
+      email: 'naveen@example.com',
+      password: 'billbox2026',
+      phone: '9876543210',
+    );
+
+    final updated = await repository.updateProfile(
+      userId: user.id,
+      name: '  Naveen V ',
+      phone: '98765 00000',
+    );
+
+    expect(updated.name, 'Naveen V');
+    expect(updated.phone, '9876500000');
+    expect(updated.email, 'naveen@example.com');
+    expect(updated.id, user.id);
+
+    // The account can still be logged into with the same password.
+    await repository.logOut();
+    final again = await repository.logIn(
+      email: 'naveen@example.com',
+      password: 'billbox2026',
+    );
+    expect(again.name, 'Naveen V');
+  });
+
+  test('clearing the number removes it', () async {
+    final user = await repository.signUp(
+      name: 'Naveen',
+      email: 'naveen@example.com',
+      password: 'billbox2026',
+      phone: '9876543210',
+    );
+
+    final updated = await repository.updateProfile(
+      userId: user.id,
+      name: 'Naveen',
+      phone: '',
+    );
+
+    expect(updated.phone, isNull);
+    expect((await repository.currentUser())?.phone, isNull);
+  });
+
+  test('updating an account that is gone fails loudly', () async {
+    expect(
+      () => repository.updateProfile(userId: 'u_nobody', name: 'Ghost'),
+      throwsA(isA<AuthException>()),
+    );
+  });
+
   test('corrupt storage is treated as no accounts', () async {
     await store.write(AuthLocalDataSource.usersKey, 'not json at all');
 

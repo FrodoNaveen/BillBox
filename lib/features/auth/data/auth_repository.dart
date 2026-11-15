@@ -100,6 +100,36 @@ class AuthRepository {
     return match.user;
   }
 
+  /// Saves a new name and phone number on the signed-in account. The email
+  /// is the key the account is found by, so it is not editable.
+  Future<BillBoxUser> updateProfile({
+    required String userId,
+    required String name,
+    String? phone,
+  }) async {
+    final records = await _dataSource.readUsers();
+    final index = records.indexWhere((r) => r.user.id == userId);
+    if (index < 0) {
+      throw const AuthException('That account no longer exists.');
+    }
+
+    final existing = records[index];
+    final updated = existing.user.copyWith(
+      name: name.trim(),
+      phone: _normalisePhone(phone),
+      clearPhone: _normalisePhone(phone) == null,
+    );
+
+    final next = <UserRecord>[...records]
+      ..[index] = UserRecord(
+        user: updated,
+        passwordSalt: existing.passwordSalt,
+        passwordHash: existing.passwordHash,
+      );
+    await _dataSource.writeUsers(next);
+    return updated;
+  }
+
   Future<void> logOut() => _dataSource.clearSession();
 
   String _normaliseEmail(String email) => email.trim().toLowerCase();
