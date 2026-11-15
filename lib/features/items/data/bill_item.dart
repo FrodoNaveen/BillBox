@@ -66,6 +66,10 @@ class BillItem {
 
   IconData get icon => iconForCategory(category);
 
+  /// True for the stand-in catalogue shown before anything is saved: those
+  /// cannot be edited or deleted, because they were never stored.
+  bool get isSample => id.startsWith('sample_');
+
   /// Days until [expiryDate]; null when the item has no date. Negative once
   /// the date has passed.
   int? daysLeft({DateTime? now}) {
@@ -94,6 +98,7 @@ class BillItem {
   ExpiringItem toExpiringItem({DateTime? now}) {
     final days = daysLeft(now: now) ?? 0;
     return ExpiringItem(
+      itemId: id,
       title: title,
       subtitle: dateLabel(now: now),
       icon: icon,
@@ -106,6 +111,7 @@ class BillItem {
   /// is what a very large number of days left gives.
   SearchableItem toSearchableItem({DateTime? now}) {
     return SearchableItem(
+      itemId: id,
       title: title,
       category: category,
       dateLabel: dateLabel(now: now),

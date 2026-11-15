@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../items/presentation/providers/items_provider.dart';
+import '../../../items/presentation/screens/item_detail_screen.dart';
 import '../../data/item_search.dart';
 import '../widgets/search_filter_bar.dart';
 import '../widgets/search_pill_field.dart';
@@ -114,7 +115,14 @@ class _SearchScreenState extends State<SearchScreen> {
                         return SearchResultTile(
                           item: item,
                           query: _query,
-                          onTap: () => _showNotReady('Item details'),
+                          onTap: item.itemId == null
+                              ? null
+                              : () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        ItemDetailScreen(itemId: item.itemId!),
+                                  ),
+                                ),
                         );
                       },
                     ),

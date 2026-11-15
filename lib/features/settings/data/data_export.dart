@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import '../../search/data/search_sample_data.dart';
+import '../../items/data/bill_item.dart';
 
 /// Builds the export the settings tab puts on the clipboard.
 ///
@@ -8,7 +8,7 @@ import '../../search/data/search_sample_data.dart';
 /// is not in the project yet — but the shape below is the one a file export
 /// will use, so nothing about the format has to change later.
 String buildExportJson({
-  required List<SearchableItem> items,
+  required List<BillItem> items,
   required DateTime at,
   String? accountEmail,
 }) {
@@ -22,8 +22,12 @@ String buildExportJson({
         <String, dynamic>{
           'title': item.title,
           'category': item.category,
-          'date': item.dateLabel,
-          'daysLeft': item.daysLeft,
+          'kind': item.kind.name,
+          'date': item.dateLabel(),
+          'expiryDate': item.expiryDate?.toIso8601String(),
+          'purchaseDate': item.purchaseDate?.toIso8601String(),
+          'amount': item.amount,
+          'store': item.store,
           'scannedText': item.scannedText,
         },
     ],

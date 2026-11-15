@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/privacy_note.dart';
-import '../../../search/data/search_sample_data.dart';
+import '../../../items/presentation/providers/items_provider.dart';
 import '../../../settings/data/data_export.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/screens/profile_details_screen.dart';
@@ -45,8 +45,18 @@ class AccountScreen extends StatelessWidget {
 
   Future<void> _export(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
+    // Only what the user actually saved: the sample catalogue is not theirs
+    // to export.
+    final items = context.read<ItemsProvider>().items;
+    if (items.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Nothing saved yet to export.')),
+      );
+      return;
+    }
+
     final json = buildExportJson(
-      items: sampleSearchItems,
+      items: items,
       at: DateTime.now(),
       accountEmail: context.read<AuthProvider>().user?.email,
     );
@@ -55,7 +65,8 @@ class AccountScreen extends StatelessWidget {
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          '${sampleSearchItems.length} items copied to the clipboard as JSON.',
+          '${items.length} ${items.length == 1 ? 'item' : 'items'} copied to '
+          'the clipboard as JSON.',
         ),
       ),
     );

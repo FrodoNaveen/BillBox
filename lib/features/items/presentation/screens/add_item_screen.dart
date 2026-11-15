@@ -16,7 +16,8 @@ import '../../data/item_category_catalog.dart';
 import '../providers/items_provider.dart';
 import '../widgets/review_form_fields.dart';
 
-/// Review and save what was read from the photo.
+/// Review and save what was read from the photo — and, with [existing], the
+/// same form editing an item that is already saved.
 ///
 /// Everything the reader filled in is editable and tagged "read from bill";
 /// anything it missed is simply empty. Only a title is required — a bill with
@@ -26,10 +27,14 @@ class AddItemScreen extends StatefulWidget {
     super.key,
     this.scanned = const ScannedBill.empty(),
     this.kind = ItemKind.bill,
+    this.existing,
   });
 
   final ScannedBill scanned;
   final ItemKind kind;
+
+  /// The item being edited, or null when a new one is being added.
+  final BillItem? existing;
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
@@ -49,18 +54,28 @@ class _AddItemScreenState extends State<AddItemScreen> {
   bool _logAsSpending = true;
   bool _isSaving = false;
 
+  bool get _isEditing => widget.existing != null;
+
+  ItemKind get _kind => widget.existing?.kind ?? widget.kind;
+
   @override
   void initState() {
     super.initState();
+    final existing = widget.existing;
     final scanned = widget.scanned;
-    _title = TextEditingController(text: scanned.title ?? '');
-    _amount = TextEditingController(
-      text: scanned.amount == null ? '' : scanned.amount!.round().toString(),
+    _title = TextEditingController(
+      text: existing?.title ?? scanned.title ?? '',
     );
-    _store = TextEditingController(text: scanned.store ?? '');
-    _category = normaliseCategory(scanned.category);
-    _purchaseDate = scanned.purchaseDate;
-    _expiryDate = scanned.expiryDate;
+    final amount = existing?.amount ?? scanned.amount;
+    _amount = TextEditingController(
+      text: amount == null ? '' : amount.round().toString(),
+    );
+    _store = TextEditingController(
+      text: existing?.store ?? scanned.store ?? '',
+    );
+    _category = normaliseCategory(existing?.category ?? scanned.category);
+    _purchaseDate = existing?.purchaseDate ?? scanned.purchaseDate;
+    _expiryDate = existing?.expiryDate ?? scanned.expiryDate;
     // Replaced with the user's own lead times once the settings provider is
     // reachable, in didChangeDependencies below.
     _leadDays = AppSettings.defaultLeadDays.toSet();
@@ -69,10 +84,13 @@ class _AddItemScreenState extends State<AddItemScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_leadDaysTakenFromSettings) {
-      _leadDays = context.read<SettingsProvider>().settings.leadDays.toSet();
-      _leadDaysTakenFromSettings = true;
-    }
+    if (_leadDaysTakenFromSettings) return;
+    // An item being edited keeps the lead times it was saved with; a new one
+    // starts from the user's own settings.
+    _leadDays =
+        widget.existing?.reminderLeadDays.toSet() ??
+        context.read<SettingsProvider>().settings.leadDays.toSet();
+    _leadDaysTakenFromSettings = true;
   }
 
   @override
@@ -126,7 +144,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       initialDate: initial,
       firstDate: DateTime(now.year - 30),
       lastDate: DateTime(now.year + 30),
-      helpText: expiry ? widget.kind.dateFieldLabel : 'Purchase date',
+      helpText: expiry ? _kind.dateFieldLabel : 'Purchase date',
     );
     if (picked == null) return;
     setState(() {
@@ -148,11 +166,34 @@ class _AddItemScreenState extends State<AddItemScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSaving = true);
+
+    final existing = widget.existing;
+    if (existing != null) {
+      await context.read<ItemsProvider>().edit(
+        existing.copyWith(
+          title: _title.text.trim(),
+          category: _category,
+          store: _store.text.trim().isEmpty ? null : _store.text.trim(),
+          amount: _parsedAmount(),
+          purchaseDate: _purchaseDate,
+          expiryDate: _expiryDate,
+          reminderLeadDays: _leadDays,
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Changes saved.')));
+      return;
+    }
+
     final item = BillItem(
       id: 'i_${DateTime.now().microsecondsSinceEpoch}',
       title: _title.text.trim(),
       category: _category,
-      kind: widget.kind,
+      kind: _kind,
       savedAt: DateTime.now(),
       store: _store.text.trim().isEmpty ? null : _store.text.trim(),
       amount: _parsedAmount(),
@@ -213,12 +254,19 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(scanned.isEmpty ? 'Add item' : 'Check the details'),
+        title: Text(
+          _isEditing
+              ? 'Edit item'
+              : scanned.isEmpty
+              ? 'Add item'
+              : 'Check the details',
+        ),
         actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _clearAll,
-            child: const Text('Clear all'),
-          ),
+          if (!_isEditing)
+            TextButton(
+              onPressed: _isSaving ? null : _clearAll,
+              child: const Text('Clear all'),
+            ),
           const SizedBox(width: 4),
         ],
       ),
@@ -310,7 +358,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: PickerField(
-                    label: widget.kind.dateFieldLabel,
+                    label: _kind.dateFieldLabel,
                     value: pickerDateLabel(_expiryDate),
                     placeholder: 'Pick a date',
                     icon: Icons.calendar_today_outlined,
@@ -330,7 +378,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   ),
                 ),
               ),
-            if (_parsedAmount() != null) ...[
+            if (!_isEditing && _parsedAmount() != null) ...[
               const SizedBox(height: 14),
               _LogAsSpendingTile(
                 amount: _parsedAmount()!,
@@ -352,6 +400,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       ),
       bottomNavigationBar: _SaveBar(
         isSaving: _isSaving,
+        label: _isEditing ? 'Save changes' : 'Save item',
         onCancel: () => Navigator.of(context).maybePop(),
         onSave: _save,
       ),
@@ -477,11 +526,13 @@ class _ReminderChips extends StatelessWidget {
 class _SaveBar extends StatelessWidget {
   const _SaveBar({
     required this.isSaving,
+    required this.label,
     required this.onCancel,
     required this.onSave,
   });
 
   final bool isSaving;
+  final String label;
   final VoidCallback onCancel;
   final VoidCallback onSave;
 
@@ -520,7 +571,7 @@ class _SaveBar extends StatelessWidget {
                           ),
                         )
                       : const Icon(Icons.save_outlined, size: 20),
-                  label: const Text('Save item'),
+                  label: Text(label),
                 ),
               ),
             ],

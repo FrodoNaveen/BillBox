@@ -75,7 +75,7 @@ class _AppShellState extends State<AppShell> {
             onOpenSearch: () => _select(ShellTab.search),
             onOpenReminders: () => _select(ShellTab.reminders),
           ),
-          const RemindersScreen(),
+          RemindersScreen(onAddItem: _openCapture),
           const SearchScreen(),
           const AccountScreen(),
         ],

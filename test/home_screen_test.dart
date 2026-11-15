@@ -8,6 +8,7 @@ import 'package:billbox/features/home/presentation/screens/home_screen.dart';
 import 'package:billbox/features/home/presentation/widgets/summary_card.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
+import 'package:billbox/features/items/data/sample_items.dart';
 import 'package:billbox/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:billbox/features/expenses/presentation/widgets/spending_card.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
@@ -56,7 +57,10 @@ void main() {
       find.text('Sample items — add your first bill with the + button.'),
       findsOneWidget,
     );
-    expect(find.widgetWithText(SummaryCard, '12'), findsOneWidget);
+    expect(
+      find.widgetWithText(SummaryCard, '${sampleBillItems.length}'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a saved item replaces the samples', (tester) async {

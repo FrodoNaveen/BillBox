@@ -44,6 +44,14 @@ class ExpensesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The expense logged from a captured bill, if the user asked for one.
+  Expense? expenseForItem(String itemId) {
+    for (final expense in _expenses) {
+      if (expense.linkedItemId == itemId) return expense;
+    }
+    return null;
+  }
+
   double totalOnDay(DateTime day) => totalOn(_expenses, day);
 
   double totalThisMonth({DateTime? now}) =>

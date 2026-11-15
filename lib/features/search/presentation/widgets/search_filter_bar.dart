@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/choice_pill.dart';
+import '../../../items/data/item_category_catalog.dart';
 import '../../data/item_search.dart';
-import '../../data/search_sample_data.dart';
 
 /// The scrolling chip row under the search field: one category at a time,
 /// plus how far ahead to look for expiry dates.
@@ -35,7 +35,7 @@ class SearchFilterBar extends StatelessWidget {
             selected: category == null,
             onTap: () => onCategoryChanged(null),
           ),
-          for (final name in searchCategories) ...[
+          for (final name in itemCategories) ...[
             const SizedBox(width: 8),
             ChoicePill(
               label: name,

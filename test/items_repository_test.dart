@@ -2,6 +2,7 @@ import 'package:billbox/core/storage/key_value_store.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/bill_scanner.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
+import 'package:billbox/features/items/data/sample_items.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -75,7 +76,7 @@ void main() {
         await provider.load();
 
         expect(provider.isShowingSamples, isTrue);
-        expect(provider.savedCount, 12);
+        expect(provider.savedCount, sampleBillItems.length);
         expect(provider.searchItems, isNotEmpty);
         expect(provider.categories.length, 6);
       },
