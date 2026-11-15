@@ -153,7 +153,9 @@ class _NavTab extends StatelessWidget {
               children: [
                 Icon(
                   selected ? destination.activeIcon : destination.icon,
-                  size: 22,
+                  // An unselected tab is icon only, so it carries a slightly
+                  // larger icon than the selected pill, which also has a label.
+                  size: selected ? 22 : 25,
                   color: foreground,
                 ),
                 if (selected) ...[
