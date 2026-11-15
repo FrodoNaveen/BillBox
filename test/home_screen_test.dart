@@ -1,9 +1,15 @@
 import 'package:billbox/core/storage/key_value_store.dart';
 import 'package:billbox/core/theme/app_theme.dart';
+import 'package:billbox/core/utils/formatting.dart';
+import 'package:billbox/features/expenses/data/expense.dart';
+import 'package:billbox/features/expenses/data/expenses_repository.dart';
+import 'package:billbox/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:billbox/features/home/presentation/screens/home_screen.dart';
 import 'package:billbox/features/home/presentation/widgets/summary_card.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
+import 'package:billbox/features/expenses/presentation/screens/expenses_screen.dart';
+import 'package:billbox/features/expenses/presentation/widgets/spending_card.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,10 +18,14 @@ import 'package:provider/provider.dart';
 void main() {
   late ItemsRepository items;
   late ItemsProvider provider;
+  late ExpensesProvider expenses;
 
   setUp(() {
     items = ItemsRepository(InMemoryStore());
     provider = ItemsProvider(repository: items);
+    expenses = ExpensesProvider(
+      repository: ExpensesRepository(InMemoryStore()),
+    );
   });
 
   Future<void> pumpDashboard(WidgetTester tester) async {
@@ -23,9 +33,13 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await provider.load();
+    await expenses.load();
     await tester.pumpWidget(
-      ChangeNotifierProvider<ItemsProvider>.value(
-        value: provider,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ItemsProvider>.value(value: provider),
+          ChangeNotifierProvider<ExpensesProvider>.value(value: expenses),
+        ],
         child: MaterialApp(
           theme: AppTheme.light(),
           home: HomeScreen(onOpenSearch: () {}, onOpenReminders: () {}),
@@ -65,5 +79,34 @@ void main() {
     expect(find.text('5 days'), findsOneWidget);
     // One saved, one expiring soon.
     expect(find.widgetWithText(SummaryCard, '1'), findsNWidgets(2));
+  });
+
+  testWidgets('the spending card shows the month and opens the calendar', (
+    tester,
+  ) async {
+    await pumpDashboard(tester);
+
+    expect(
+      find.widgetWithText(SpendingCard, 'Nothing logged yet — tap to add'),
+      findsOneWidget,
+    );
+
+    await expenses.add(
+      Expense(
+        id: 'e_1',
+        amount: 840,
+        category: 'Groceries',
+        date: dayOf(DateTime.now()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(SpendingCard, '₹840'), findsOneWidget);
+    expect(find.textContaining('today ₹840'), findsOneWidget);
+
+    await tester.tap(find.byType(SpendingCard));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ExpensesScreen), findsOneWidget);
   });
 }

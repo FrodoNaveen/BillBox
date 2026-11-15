@@ -1,7 +1,7 @@
 import 'package:billbox/features/home/data/home_sample_data.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/item_category_catalog.dart';
-import 'package:billbox/features/items/data/item_formatting.dart';
+import 'package:billbox/core/utils/formatting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

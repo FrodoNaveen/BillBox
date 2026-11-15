@@ -22,6 +22,7 @@ class AppTextField extends StatelessWidget {
     this.maxLength,
     this.inputFormatters,
     this.enabled = true,
+    this.autofocus = false,
     this.validator,
     this.onChanged,
     this.onFieldSubmitted,
@@ -46,6 +47,7 @@ class AppTextField extends StatelessWidget {
   final int? maxLength;
   final List<TextInputFormatter>? inputFormatters;
   final bool enabled;
+  final bool autofocus;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
@@ -90,6 +92,7 @@ class AppTextField extends StatelessWidget {
           textCapitalization: textCapitalization,
           autofillHints: autofillHints,
           enabled: enabled,
+          autofocus: autofocus,
           maxLength: maxLength,
           inputFormatters: inputFormatters,
           validator: validator,

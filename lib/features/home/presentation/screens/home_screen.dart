@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../expenses/presentation/providers/expenses_provider.dart';
+import '../../../expenses/presentation/screens/expenses_screen.dart';
+import '../../../expenses/presentation/widgets/spending_card.dart';
 import '../../../items/presentation/providers/items_provider.dart';
 import '../widgets/category_tile.dart';
 import '../widgets/expiring_item_tile.dart';
@@ -32,6 +35,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final items = context.watch<ItemsProvider>();
+    final expenses = context.watch<ExpensesProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -76,6 +80,15 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           if (items.isShowingSamples) const _SampleDataNote(),
+          const SizedBox(height: 10),
+          SpendingCard(
+            monthTotal: expenses.totalThisMonth(),
+            todayTotal: expenses.totalOnDay(DateTime.now()),
+            week: expenses.lastSevenDaysSpend,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const ExpensesScreen()),
+            ),
+          ),
           const SizedBox(height: 18),
           _SectionHeader(
             title: 'Expiring soon',

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../home/data/home_sample_data.dart';
 import '../../search/data/search_sample_data.dart';
 import 'item_category_catalog.dart';
-import 'item_formatting.dart';
+import '../../../core/utils/formatting.dart';
 
 /// What was captured: a bill with a warranty, or a document that expires.
 /// It only changes the wording and which date is asked for.

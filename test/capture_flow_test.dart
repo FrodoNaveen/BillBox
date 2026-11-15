@@ -1,5 +1,7 @@
 import 'package:billbox/core/storage/key_value_store.dart';
 import 'package:billbox/core/theme/app_theme.dart';
+import 'package:billbox/features/expenses/data/expenses_repository.dart';
+import 'package:billbox/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/bill_scanner.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
@@ -15,10 +17,12 @@ import 'package:provider/provider.dart';
 void main() {
   late InMemoryStore store;
   late ItemsRepository items;
+  late ExpensesRepository expenses;
 
   setUp(() {
     store = InMemoryStore();
     items = ItemsRepository(store);
+    expenses = ExpensesRepository(store);
   });
 
   /// The capture screen with an instant reader, so no test waits 900ms.
@@ -31,6 +35,9 @@ void main() {
         providers: [
           ChangeNotifierProvider<ItemsProvider>(
             create: (_) => ItemsProvider(repository: items)..load(),
+          ),
+          ChangeNotifierProvider<ExpensesProvider>(
+            create: (_) => ExpensesProvider(repository: expenses)..load(),
           ),
           ChangeNotifierProvider<SettingsProvider>(
             create: (_) =>
@@ -154,5 +161,59 @@ void main() {
 
     expect(find.text('Samsung 1.5T Split AC'), findsNothing);
     expect(find.text('Pick a date'), findsNWidgets(2));
+  });
+
+  testWidgets('a bill with an amount is also logged as spending', (
+    tester,
+  ) async {
+    await pumpCapture(tester);
+
+    await tester.tap(find.bySemanticsLabel('Take photo'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Also log ₹39,699 as spending'), findsOneWidget);
+
+    await tester.tap(find.text('Save item'));
+    await tester.pumpAndSettle();
+
+    final logged = await expenses.readAll();
+    expect(logged, hasLength(1));
+    expect(logged.single.amount, 39699);
+    // "Appliances" is not a spending category, so it is mapped to one.
+    expect(logged.single.category, 'Shopping');
+    expect(logged.single.note, 'Samsung 1.5T Split AC');
+    expect(logged.single.linkedItemId, (await items.readAll()).single.id);
+    expect(find.textContaining('₹39,699 added to spending'), findsOneWidget);
+  });
+
+  testWidgets('unticking the box keeps the bill out of spending', (
+    tester,
+  ) async {
+    await pumpCapture(tester);
+
+    await tester.tap(find.bySemanticsLabel('Take photo'));
+    await tester.pumpAndSettle();
+    // The tile sits below the fold on a phone, so scroll to it first.
+    final box = find.textContaining('Also log ₹39,699 as spending');
+    await tester.ensureVisible(box);
+    await tester.pumpAndSettle();
+    await tester.tap(box);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save item'));
+    await tester.pumpAndSettle();
+
+    expect(await items.readAll(), hasLength(1));
+    expect(await expenses.readAll(), isEmpty);
+  });
+
+  testWidgets('a bill with no amount never offers the spending box', (
+    tester,
+  ) async {
+    await pumpCapture(tester);
+
+    await tester.tap(find.bySemanticsLabel('Add details without a photo'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('as spending'), findsNothing);
   });
 }
