@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/utils/formatting.dart';
 import '../../../../core/widgets/choice_pill.dart';
+import '../../../expenses/data/expense.dart';
+import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../../settings/data/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/bill_item.dart';
@@ -43,6 +46,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
   DateTime? _expiryDate;
   late Set<int> _leadDays;
   bool _leadDaysTakenFromSettings = false;
+  bool _logAsSpending = true;
   bool _isSaving = false;
 
   @override
@@ -160,11 +164,37 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
 
     await context.read<ItemsProvider>().add(item);
+
+    // A bill with an amount can count as spending too, so the purchase does
+    // not have to be typed in twice.
+    final amount = item.amount;
+    final loggedAsSpending = _logAsSpending && amount != null;
+    if (loggedAsSpending && mounted) {
+      await context.read<ExpensesProvider>().add(
+        Expense(
+          id: 'e_${DateTime.now().microsecondsSinceEpoch}',
+          amount: amount,
+          category: expenseCategoryForItemCategory(item.category),
+          date: item.purchaseDate ?? DateTime.now(),
+          note: item.title,
+          linkedItemId: item.id,
+        ),
+      );
+    }
     if (!mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).popUntil((route) => route.isFirst);
-    messenger.showSnackBar(SnackBar(content: Text(_savedMessage(item))));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          loggedAsSpending
+              ? '${_savedMessage(item)} ${formatRupees(amount)} added to '
+                    'spending.'
+              : _savedMessage(item),
+        ),
+      ),
+    );
   }
 
   String _savedMessage(BillItem item) {
@@ -242,6 +272,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     label: 'Amount',
                     controller: _amount,
                     hint: '39,699',
+                    onChanged: (_) => setState(() {}),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
@@ -299,6 +330,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   ),
                 ),
               ),
+            if (_parsedAmount() != null) ...[
+              const SizedBox(height: 14),
+              _LogAsSpendingTile(
+                amount: _parsedAmount()!,
+                day: _purchaseDate ?? DateTime.now(),
+                value: _logAsSpending,
+                onChanged: (value) => setState(() => _logAsSpending = value),
+              ),
+            ],
             const SizedBox(height: 20),
             _ReminderChips(
               leadDays: _leadDays,
@@ -314,6 +354,74 @@ class _AddItemScreenState extends State<AddItemScreen> {
         isSaving: _isSaving,
         onCancel: () => Navigator.of(context).maybePop(),
         onSave: _save,
+      ),
+    );
+  }
+}
+
+/// Offers to count a bill with an amount as spending too, so a scanned
+/// purchase does not have to be typed in twice.
+class _LogAsSpendingTile extends StatelessWidget {
+  const _LogAsSpendingTile({
+    required this.amount,
+    required this.day,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final double amount;
+  final DateTime day;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: scheme.surfaceContainerLowest,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(6, 4, 14, 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.cardBorder),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Checkbox(
+                value: value,
+                onChanged: (next) => onChanged(next ?? false),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Also log ${formatRupees(amount)} as spending',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'on ${formatRelativeDay(day)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

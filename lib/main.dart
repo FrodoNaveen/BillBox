@@ -5,6 +5,7 @@ import 'app.dart';
 import 'core/storage/key_value_store.dart';
 import 'features/auth/data/auth_local_data_source.dart';
 import 'features/auth/data/auth_repository.dart';
+import 'features/expenses/data/expenses_repository.dart';
 import 'features/items/data/items_repository.dart';
 import 'features/settings/data/settings_repository.dart';
 
@@ -18,12 +19,14 @@ Future<void> main() async {
   final authRepository = AuthRepository(dataSource: AuthLocalDataSource(store));
   final settingsRepository = SettingsRepository(store);
   final itemsRepository = ItemsRepository(store);
+  final expensesRepository = ExpensesRepository(store);
 
   runApp(
     BillBoxApp(
       authRepository: authRepository,
       settingsRepository: settingsRepository,
       itemsRepository: itemsRepository,
+      expensesRepository: expensesRepository,
     ),
   );
 }

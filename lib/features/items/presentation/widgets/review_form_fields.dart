@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../data/item_formatting.dart';
+import '../../../../core/utils/formatting.dart';
 
 /// The little "read from bill" tag under a field the photo filled in.
 class ReadFromBillChip extends StatelessWidget {
