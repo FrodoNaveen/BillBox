@@ -3,13 +3,15 @@ import 'package:provider/provider.dart';
 
 import '../../../items/presentation/providers/items_provider.dart';
 import '../../../items/presentation/screens/item_detail_screen.dart';
+import '../../../items/presentation/widgets/swipeable_item_row.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/screens/reminder_settings_screen.dart';
 import '../../data/reminder_groups.dart';
 import '../widgets/reminder_row.dart';
 
 /// Everything with a date, nearest first, in bands: already passed, this
-/// week, the next thirty days, then later.
+/// week, the next thirty days, then later. Each row swipes right to edit and
+/// left to delete, for fixing a bill entered wrongly.
 ///
 /// The card at the top is the honest state of notifications — what the
 /// settings say, and the fact that nothing is being sent yet.
@@ -65,11 +67,14 @@ class RemindersScreen extends StatelessWidget {
               for (final item in group.items)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: ReminderRow(
+                  child: SwipeableItemRow(
                     item: item,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => ItemDetailScreen(itemId: item.id),
+                    child: ReminderRow(
+                      item: item,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => ItemDetailScreen(itemId: item.id),
+                        ),
                       ),
                     ),
                   ),

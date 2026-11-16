@@ -11,6 +11,7 @@ import 'package:billbox/features/items/data/items_repository.dart';
 import 'package:billbox/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:billbox/features/expenses/presentation/widgets/spending_card.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
+import 'package:billbox/features/items/presentation/widgets/swipeable_item_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -74,6 +75,8 @@ void main() {
 
     expect(find.textContaining('Nothing saved yet'), findsNothing);
     expect(find.text('Split AC'), findsOneWidget);
+    // The row swipes right to edit and left to delete.
+    expect(find.byType(SwipeableItemRow), findsOneWidget);
     expect(find.text('5 days'), findsOneWidget);
     // One saved, one expiring soon.
     expect(find.widgetWithText(SummaryCard, '1'), findsNWidgets(2));

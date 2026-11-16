@@ -4,6 +4,7 @@ import 'package:billbox/core/utils/formatting.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
+import 'package:billbox/features/items/presentation/widgets/swipeable_item_row.dart';
 import 'package:billbox/features/search/presentation/screens/search_screen.dart';
 import 'package:billbox/features/search/presentation/widgets/search_result_tile.dart';
 import 'package:flutter/material.dart';
@@ -105,6 +106,16 @@ Future<void> _pumpSearch(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('each result can be fixed in place by swiping', (tester) async {
+    await _pumpSearch(tester);
+
+    expect(
+      find.byType(SwipeableItemRow),
+      findsWidgets,
+      reason: 'search rows should swipe to edit and delete',
+    );
+  });
+
   testWidgets('opens with every item, soonest first', (tester) async {
     await _pumpSearch(tester);
 
