@@ -6,9 +6,9 @@ import '../../../../core/utils/formatting.dart';
 import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../data/bill_item.dart';
+import '../item_actions.dart';
 import '../providers/items_provider.dart';
 import '../widgets/bill_paper.dart';
-import 'add_item_screen.dart';
 
 /// Everything kept about one item: the photo it came from, how long is left,
 /// the figures and dates, the text read from the bill, and the way to edit or
@@ -21,43 +21,14 @@ class ItemDetailScreen extends StatelessWidget {
 
   final String itemId;
 
-  Future<void> _edit(BuildContext context, BillItem item) {
-    return Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => AddItemScreen(existing: item)),
-    );
-  }
-
+  /// Leaves the screen once the item it was showing is gone.
   Future<void> _confirmDelete(BuildContext context, BillItem item) async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete this item?'),
-        content: Text(
-          '${item.title} and its reminders are removed from this phone. '
-          'This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (!(shouldDelete ?? false) || !context.mounted) return;
-
-    final messenger = ScaffoldMessenger.of(context);
-    await context.read<ItemsProvider>().remove(item.id);
+    if (!await confirmDeleteItem(context, item)) return;
     if (!context.mounted) return;
-    Navigator.of(context).pop();
-    messenger.showSnackBar(SnackBar(content: Text('${item.title} deleted.')));
+
+    final navigator = Navigator.of(context);
+    await deleteItem(context, item);
+    navigator.pop();
   }
 
   @override
@@ -88,7 +59,7 @@ class ItemDetailScreen extends StatelessWidget {
               PopupMenuButton<String>(
                 tooltip: 'More options',
                 onSelected: (choice) => choice == 'edit'
-                    ? _edit(context, item)
+                    ? editItem(context, item)
                     : _confirmDelete(context, item),
                 itemBuilder: (_) => const [
                   PopupMenuItem<String>(value: 'edit', child: Text('Edit')),
@@ -130,7 +101,7 @@ class ItemDetailScreen extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: _ActionBar(
-        onEdit: () => _edit(context, item),
+        onEdit: () => editItem(context, item),
         onDelete: () => _confirmDelete(context, item),
       ),
     );

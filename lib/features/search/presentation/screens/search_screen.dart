@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../items/presentation/providers/items_provider.dart';
 import '../../../items/presentation/screens/item_detail_screen.dart';
+import '../../../items/presentation/widgets/swipeable_item_row.dart';
 import '../../data/item_search.dart';
 import '../widgets/search_filter_bar.dart';
 import '../widgets/search_pill_field.dart';
@@ -11,6 +12,9 @@ import '../widgets/search_result_tile.dart';
 /// The search tab: a query, a category chip, an expiry window, and the rows
 /// that match. Everything filters as the user types, over the items
 /// [ItemsProvider] holds — only what has actually been saved.
+///
+/// Each result swipes right to edit and left to delete, so a bill entered
+/// wrongly can be put right from the list.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -54,8 +58,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final items = context.watch<ItemsProvider>();
     final results = searchItems(
-      source: context.watch<ItemsProvider>().searchItems,
+      source: items.searchItems,
       query: _query,
       category: _category,
       window: _window,
@@ -111,18 +116,21 @@ class _SearchScreenState extends State<SearchScreen> {
                           );
                         }
                         final item = results[index];
-                        return SearchResultTile(
+                        final saved = items.itemById(item.itemId);
+                        final tile = SearchResultTile(
                           item: item,
                           query: _query,
-                          onTap: item.itemId == null
+                          onTap: saved == null
                               ? null
                               : () => Navigator.of(context).push(
                                   MaterialPageRoute<void>(
                                     builder: (_) =>
-                                        ItemDetailScreen(itemId: item.itemId!),
+                                        ItemDetailScreen(itemId: saved.id),
                                   ),
                                 ),
                         );
+                        if (saved == null) return tile;
+                        return SwipeableItemRow(item: saved, child: tile);
                       },
                     ),
             ),

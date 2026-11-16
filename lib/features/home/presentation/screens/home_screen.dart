@@ -6,6 +6,8 @@ import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../expenses/presentation/widgets/spending_card.dart';
 import '../../../items/presentation/providers/items_provider.dart';
 import '../../../items/presentation/screens/item_detail_screen.dart';
+import '../../../items/presentation/widgets/swipeable_item_row.dart';
+import '../../data/home_sample_data.dart';
 import '../widgets/category_tile.dart';
 import '../widgets/expiring_item_tile.dart';
 import '../widgets/summary_card.dart';
@@ -13,6 +15,9 @@ import '../widgets/summary_card.dart';
 /// The dashboard: what is saved, what expires next, and the categories to
 /// browse. The numbers and rows come from [ItemsProvider] — only what has
 /// actually been saved, so a fresh install reads zero across the board.
+///
+/// The "Expiring soon" rows swipe right to edit and left to delete, as they
+/// do in the reminders and search tabs.
 ///
 /// It is one tab of the app shell, so the search and bell actions hand control
 /// back to the shell instead of pushing a route.
@@ -25,12 +30,6 @@ class HomeScreen extends StatelessWidget {
 
   final VoidCallback onOpenSearch;
   final VoidCallback onOpenReminders;
-
-  void _openItem(BuildContext context, String itemId) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => ItemDetailScreen(itemId: itemId)),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,15 +98,10 @@ class HomeScreen extends StatelessWidget {
           if (items.expiringItems.isEmpty)
             const _NothingExpiring()
           else
-            for (final item in items.expiringItems)
+            for (final row in items.expiringItems)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: ExpiringItemTile(
-                  item: item,
-                  onTap: item.itemId == null
-                      ? null
-                      : () => _openItem(context, item.itemId!),
-                ),
+                child: _ExpiringRow(row: row),
               ),
           const SizedBox(height: 8),
           const _SectionHeader(title: 'Categories'),
@@ -139,6 +133,32 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// One "Expiring soon" row, with the swipe actions when the item behind it
+/// is still saved.
+class _ExpiringRow extends StatelessWidget {
+  const _ExpiringRow({required this.row});
+
+  final ExpiringItem row;
+
+  @override
+  Widget build(BuildContext context) {
+    final saved = context.watch<ItemsProvider>().itemById(row.itemId);
+
+    final tile = ExpiringItemTile(
+      item: row,
+      onTap: saved == null
+          ? null
+          : () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ItemDetailScreen(itemId: saved.id),
+              ),
+            ),
+    );
+    if (saved == null) return tile;
+    return SwipeableItemRow(item: saved, child: tile);
   }
 }
 
