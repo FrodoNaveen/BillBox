@@ -8,7 +8,6 @@ import 'package:billbox/features/home/presentation/screens/home_screen.dart';
 import 'package:billbox/features/home/presentation/widgets/summary_card.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
-import 'package:billbox/features/items/data/sample_items.dart';
 import 'package:billbox/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:billbox/features/expenses/presentation/widgets/spending_card.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
@@ -50,20 +49,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('says so while it is still showing sample items', (tester) async {
+  testWidgets('reads zero and says nothing is saved yet', (tester) async {
     await pumpDashboard(tester);
 
-    expect(
-      find.text('Sample items — add your first bill with the + button.'),
-      findsOneWidget,
-    );
-    expect(
-      find.widgetWithText(SummaryCard, '${sampleBillItems.length}'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Nothing saved yet'), findsOneWidget);
+    // Items saved and expiring soon both read zero.
+    expect(find.widgetWithText(SummaryCard, '0'), findsNWidgets(2));
   });
 
-  testWidgets('a saved item replaces the samples', (tester) async {
+  testWidgets('a saved item fills the dashboard', (tester) async {
     await pumpDashboard(tester);
 
     await provider.add(
@@ -78,7 +72,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Sample items'), findsNothing);
+    expect(find.textContaining('Nothing saved yet'), findsNothing);
     expect(find.text('Split AC'), findsOneWidget);
     expect(find.text('5 days'), findsOneWidget);
     // One saved, one expiring soon.

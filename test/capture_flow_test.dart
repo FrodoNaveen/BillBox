@@ -4,6 +4,7 @@ import 'package:billbox/features/expenses/data/expenses_repository.dart';
 import 'package:billbox/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/bill_scanner.dart';
+import 'package:billbox/features/items/data/item_category_catalog.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
 import 'package:billbox/features/items/presentation/screens/add_item_screen.dart';
@@ -13,6 +14,9 @@ import 'package:billbox/features/settings/presentation/providers/settings_provid
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+
+/// The day the stub reading is dated from, so the expected dates are fixed.
+final DateTime _now = DateTime(2026, 11, 15);
 
 void main() {
   late InMemoryStore store;
@@ -46,12 +50,7 @@ void main() {
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
-          home: CaptureBillScreen(
-            scanner: SampleBillScanner(
-              delay: Duration.zero,
-              now: DateTime(2026, 11, 15),
-            ),
-          ),
+          home: CaptureBillScreen(scanner: _StubScanner(now: _now)),
         ),
       ),
     );
@@ -216,4 +215,65 @@ void main() {
 
     expect(find.textContaining('as spending'), findsNothing);
   });
+}
+
+/// A reader that returns a fixed reading, so the review form can be driven
+/// end to end. The app's own [EmptyBillScanner] reads nothing until the OCR
+/// plugin lands, which is why the fixture lives here rather than in `lib/`.
+class _StubScanner implements BillScanner {
+  _StubScanner({required this.now});
+
+  final DateTime now;
+
+  @override
+  Future<ScannedBill> scan({
+    required ItemKind kind,
+    required CaptureSource source,
+  }) async {
+    if (source == CaptureSource.manual) return const ScannedBill.empty();
+
+    if (kind == ItemKind.document) {
+      return ScannedBill(
+        title: 'Passport',
+        category: 'Identity',
+        store: 'Regional Passport Office, Chennai',
+        purchaseDate: DateTime(now.year - 4, 2, 4),
+        expiryDate: DateTime(now.year + 6, 2, 3),
+        rawText: 'Passport no. Z21 · date of expiry 3 Feb ${now.year + 6}',
+        note: '"Date of expiry" on the document',
+        imageName: 'passport_front.jpg',
+        source: source,
+        readFields: const <ScannedField>{
+          ScannedField.title,
+          ScannedField.category,
+          ScannedField.store,
+          ScannedField.purchaseDate,
+          ScannedField.expiryDate,
+        },
+      );
+    }
+
+    return ScannedBill(
+      title: 'Samsung 1.5T Split AC',
+      category: normaliseCategory('Appliances'),
+      store: 'Sri Electronics, Coimbatore',
+      amount: 39699,
+      purchaseDate: now,
+      expiryDate: DateTime(now.year + 2, now.month, now.day),
+      rawText:
+          'SRI ELECTRONICS · Split AC 1.5T 38,499.00 · '
+          'TOTAL 39,699.00 · Warranty 24 months',
+      note: '"Warranty 24 months" on the bill',
+      imageName: 'bill_${now.day}${now.month}.jpg',
+      source: source,
+      readFields: const <ScannedField>{
+        ScannedField.title,
+        ScannedField.category,
+        ScannedField.store,
+        ScannedField.amount,
+        ScannedField.purchaseDate,
+        ScannedField.expiryDate,
+      },
+    );
+  }
 }

@@ -9,9 +9,8 @@ import '../widgets/search_pill_field.dart';
 import '../widgets/search_result_tile.dart';
 
 /// The search tab: a query, a category chip, an expiry window, and the rows
-/// that match. Everything filters as the user types, over whatever
-/// [ItemsProvider] holds — the saved items, or the sample catalogue while
-/// nothing has been saved yet.
+/// that match. Everything filters as the user types, over the items
+/// [ItemsProvider] holds — only what has actually been saved.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 

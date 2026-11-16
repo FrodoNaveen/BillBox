@@ -88,7 +88,7 @@ class _PreviewStandIn extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             'Camera preview arrives with the camera plugin.\n'
-            'The shutter still reads a sample bill.',
+            'Until then the details are typed in on the next screen.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,

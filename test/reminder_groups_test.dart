@@ -1,5 +1,4 @@
 import 'package:billbox/features/items/data/bill_item.dart';
-import 'package:billbox/features/items/data/sample_items.dart';
 import 'package:billbox/features/reminders/data/reminder_groups.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -88,15 +87,5 @@ void main() {
 
       expect(count, 3);
     });
-  });
-
-  test('the sample catalogue fills the week, the month and later', () {
-    final groups = groupByReminderWindow(buildSampleItems(now: now), now: now);
-
-    expect(groups.map((g) => g.window), [
-      ReminderWindow.thisWeek,
-      ReminderWindow.next30,
-      ReminderWindow.later,
-    ]);
   });
 }

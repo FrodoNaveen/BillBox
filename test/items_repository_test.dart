@@ -2,7 +2,6 @@ import 'package:billbox/core/storage/key_value_store.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/bill_scanner.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
-import 'package:billbox/features/items/data/sample_items.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -69,20 +68,20 @@ void main() {
   });
 
   group('ItemsProvider', () {
-    test(
-      'falls back to the sample catalogue until something is saved',
-      () async {
-        final provider = ItemsProvider(repository: repository);
-        await provider.load();
+    test('reads empty until something is saved', () async {
+      final provider = ItemsProvider(repository: repository);
+      await provider.load();
 
-        expect(provider.isShowingSamples, isTrue);
-        expect(provider.savedCount, sampleBillItems.length);
-        expect(provider.searchItems, isNotEmpty);
-        expect(provider.categories.length, 6);
-      },
-    );
+      expect(provider.isEmpty, isTrue);
+      expect(provider.savedCount, 0);
+      expect(provider.expiringSoonCount, 0);
+      expect(provider.expiringItems, isEmpty);
+      expect(provider.searchItems, isEmpty);
+      expect(provider.categories.length, 6);
+      expect(provider.categories.every((c) => c.count == 0), isTrue);
+    });
 
-    test('a saved item takes over the dashboard numbers', () async {
+    test('a saved item fills the dashboard numbers', () async {
       final provider = ItemsProvider(repository: repository);
       await provider.load();
 
@@ -95,7 +94,7 @@ void main() {
         ),
       );
 
-      expect(provider.isShowingSamples, isFalse);
+      expect(provider.isEmpty, isFalse);
       expect(provider.savedCount, 1);
       expect(provider.expiringSoonCount, 1);
       expect(provider.expiringItems.single.title, 'Split AC');
@@ -118,38 +117,38 @@ void main() {
     });
   });
 
-  group('SampleBillScanner', () {
-    test('a photo is read into the fields the form tags', () async {
-      final scanned = await SampleBillScanner(
-        delay: Duration.zero,
-        now: DateTime(2026, 11, 15),
-      ).scan(kind: ItemKind.bill, source: CaptureSource.camera);
+  group('EmptyBillScanner', () {
+    test('a photo reads nothing, so the form opens blank', () async {
+      final scanned = await EmptyBillScanner().scan(
+        kind: ItemKind.bill,
+        source: CaptureSource.camera,
+      );
 
-      expect(scanned.title, 'Samsung 1.5T Split AC');
-      expect(scanned.category, 'Appliances');
-      expect(scanned.amount, 39699);
-      expect(scanned.expiryDate, DateTime(2028, 11, 15));
-      expect(scanned.wasRead(ScannedField.amount), isTrue);
-      expect(scanned.rawText, contains('Warranty 24 months'));
-      expect(scanned.isEmpty, isFalse);
+      expect(scanned.isEmpty, isTrue);
+      expect(scanned.title, isNull);
+      expect(scanned.amount, isNull);
+      expect(scanned.expiryDate, isNull);
+      expect(scanned.rawText, isEmpty);
+      expect(scanned.imageName, isNull);
+      expect(scanned.source, CaptureSource.camera);
     });
 
-    test('a document is read with its own expiry', () async {
-      final scanned = await SampleBillScanner(
-        delay: Duration.zero,
-        now: DateTime(2026, 11, 15),
-      ).scan(kind: ItemKind.document, source: CaptureSource.gallery);
+    test('a document reads nothing either', () async {
+      final scanned = await EmptyBillScanner().scan(
+        kind: ItemKind.document,
+        source: CaptureSource.gallery,
+      );
 
-      expect(scanned.title, 'Passport');
-      expect(scanned.category, 'Identity');
-      expect(scanned.wasRead(ScannedField.amount), isFalse);
-      expect(scanned.expiryDate, DateTime(2032, 2, 3));
+      expect(scanned.isEmpty, isTrue);
+      expect(scanned.title, isNull);
+      expect(scanned.source, CaptureSource.gallery);
     });
 
     test('typing it in by hand reads nothing', () async {
-      final scanned = await SampleBillScanner(
-        delay: Duration.zero,
-      ).scan(kind: ItemKind.bill, source: CaptureSource.manual);
+      final scanned = await EmptyBillScanner().scan(
+        kind: ItemKind.bill,
+        source: CaptureSource.manual,
+      );
 
       expect(scanned.isEmpty, isTrue);
       expect(scanned.title, isNull);

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 
 /// What the search tab's rows are handed.
 ///
-/// A view model, not data: [ItemsProvider] builds these from the saved items,
-/// or from the sample catalogue while nothing is saved. [scannedText] is the
-/// text read from the photo, which is what makes searching "inside" a bill
-/// work.
+/// A view model, not data: [ItemsProvider] builds these from the saved items.
+/// [scannedText] is the text read from the photo, which is what makes
+/// searching "inside" a bill work.
 
 /// How close an item is to its date, which picks the badge colour.
 enum ExpiryBand { urgent, soon, later }

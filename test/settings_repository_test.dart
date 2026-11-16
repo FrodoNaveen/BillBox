@@ -3,7 +3,6 @@ import 'package:billbox/features/settings/data/app_settings.dart';
 import 'package:billbox/features/settings/data/data_export.dart';
 import 'package:billbox/features/settings/data/settings_repository.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
-import 'package:billbox/features/items/data/sample_items.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -77,13 +76,32 @@ void main() {
 
   group('buildExportJson', () {
     test('carries every item and the account it belongs to', () {
+      final items = <BillItem>[
+        BillItem(
+          id: 'i_1',
+          title: 'Samsung 1.5T Split AC',
+          category: 'Appliances',
+          kind: ItemKind.bill,
+          savedAt: DateTime(2026, 11, 14),
+          amount: 39699,
+          expiryDate: DateTime(2028, 11, 14),
+        ),
+        BillItem(
+          id: 'i_2',
+          title: 'Passport',
+          category: 'Identity',
+          kind: ItemKind.document,
+          savedAt: DateTime(2026, 11, 13),
+        ),
+      ];
+
       final json = buildExportJson(
-        items: sampleBillItems,
+        items: items,
         at: DateTime.utc(2026, 11, 15, 10, 30),
         accountEmail: 'naveen@example.com',
       );
 
-      expect(json, contains('"itemCount": ${sampleBillItems.length}'));
+      expect(json, contains('"itemCount": ${items.length}'));
       expect(json, contains('"exportedAt": "2026-11-15T10:30:00.000Z"'));
       expect(json, contains('naveen@example.com'));
       expect(json, contains('Samsung 1.5T Split AC'));
