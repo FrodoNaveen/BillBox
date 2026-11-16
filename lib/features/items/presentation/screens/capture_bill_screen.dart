@@ -8,9 +8,11 @@ import 'add_item_screen.dart';
 /// The capture screen: pick bill or document, then shoot, choose a photo, or
 /// skip the photo and type the details in.
 ///
-/// The live camera preview needs a plugin the project does not have yet, so
-/// the frame holds a stand-in; everything else — the modes, the reading state
-/// and handing the result to the review form — is the real flow.
+/// The live camera preview and the text recogniser need plugins the project
+/// does not have yet, so the frame holds a stand-in and nothing is read off
+/// the photo — the review form opens blank whichever button is used.
+/// Everything else — the modes and handing the result to the form — is the
+/// real flow.
 class CaptureBillScreen extends StatefulWidget {
   const CaptureBillScreen({super.key, this.scanner});
 
@@ -22,7 +24,7 @@ class CaptureBillScreen extends StatefulWidget {
 }
 
 class _CaptureBillScreenState extends State<CaptureBillScreen> {
-  late final BillScanner _scanner = widget.scanner ?? SampleBillScanner();
+  late final BillScanner _scanner = widget.scanner ?? EmptyBillScanner();
 
   ItemKind _kind = ItemKind.bill;
   bool _flashOn = false;

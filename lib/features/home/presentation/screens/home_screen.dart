@@ -11,8 +11,8 @@ import '../widgets/expiring_item_tile.dart';
 import '../widgets/summary_card.dart';
 
 /// The dashboard: what is saved, what expires next, and the categories to
-/// browse. The numbers and rows come from [ItemsProvider], which stands in
-/// the sample catalogue until the first item is saved and says so on screen.
+/// browse. The numbers and rows come from [ItemsProvider] — only what has
+/// actually been saved, so a fresh install reads zero across the board.
 ///
 /// It is one tab of the app shell, so the search and bell actions hand control
 /// back to the shell instead of pushing a route.
@@ -80,7 +80,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          if (items.isShowingSamples) const _SampleDataNote(),
           const SizedBox(height: 10),
           SpendingCard(
             monthTotal: expenses.totalThisMonth(),
@@ -97,16 +96,19 @@ class HomeScreen extends StatelessWidget {
             onAction: onOpenReminders,
           ),
           const SizedBox(height: 10),
-          for (final item in items.expiringItems)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: ExpiringItemTile(
-                item: item,
-                onTap: item.itemId == null
-                    ? null
-                    : () => _openItem(context, item.itemId!),
+          if (items.expiringItems.isEmpty)
+            const _NothingExpiring()
+          else
+            for (final item in items.expiringItems)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: ExpiringItemTile(
+                  item: item,
+                  onTap: item.itemId == null
+                      ? null
+                      : () => _openItem(context, item.itemId!),
+                ),
               ),
-            ),
           const SizedBox(height: 8),
           const _SectionHeader(title: 'Categories'),
           const SizedBox(height: 10),
@@ -140,29 +142,34 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// Said plainly while the dashboard is still showing the sample catalogue,
-/// so the numbers above are never mistaken for the user's own.
-class _SampleDataNote extends StatelessWidget {
-  const _SampleDataNote();
+/// Stands in for the "Expiring soon" rows when nothing with a date is saved,
+/// which is how the dashboard looks on a fresh install.
+class _NothingExpiring extends StatelessWidget {
+  const _NothingExpiring();
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 10, left: 4),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Row(
         children: [
-          Icon(
-            Icons.info_outline_rounded,
-            size: 15,
-            color: scheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 6),
+          Icon(Icons.inbox_rounded, size: 22, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Sample items — add your first bill with the + button.',
-              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+              'Nothing saved yet — add your first bill or document with the '
+              '+ button.',
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],

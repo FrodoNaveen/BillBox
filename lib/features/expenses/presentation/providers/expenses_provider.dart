@@ -6,8 +6,7 @@ import '../../data/expenses_repository.dart';
 
 /// Holds the logged expenses and the totals the dashboard and calendar show.
 ///
-/// Unlike items, nothing here falls back to sample data: an empty month is a
-/// true, and useful, answer.
+/// Nothing is stood in: an empty month is a true, and useful, answer.
 class ExpensesProvider extends ChangeNotifier {
   ExpensesProvider({required ExpensesRepository repository})
     : _repository = repository;

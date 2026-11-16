@@ -66,10 +66,6 @@ class BillItem {
 
   IconData get icon => iconForCategory(category);
 
-  /// True for the stand-in catalogue shown before anything is saved: those
-  /// cannot be edited or deleted, because they were never stored.
-  bool get isSample => id.startsWith('sample_');
-
   /// Days until [expiryDate]; null when the item has no date. Negative once
   /// the date has passed.
   int? daysLeft({DateTime? now}) {

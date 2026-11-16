@@ -1,5 +1,4 @@
 import 'bill_item.dart';
-import 'item_category_catalog.dart';
 
 /// Where the photo came from.
 enum CaptureSource {
@@ -72,82 +71,23 @@ abstract class BillScanner {
   });
 }
 
-/// Stand-in reader used until the camera lands.
+/// The reader in place until the camera and on-device OCR land.
 ///
-/// Returns the reading of the bill drawn in the design — a split AC with a
-/// 24-month warranty — so the review form can be used end to end. Manual
-/// entry still returns an empty result, as the real one will.
-class SampleBillScanner implements BillScanner {
-  SampleBillScanner({
-    this.delay = const Duration(milliseconds: 900),
-    DateTime? now,
-  }) : _now = now;
+/// It reads nothing, whatever the source, so the review form always opens
+/// blank and every field on a saved item is one the user typed. Keeping the
+/// seam means the real recogniser drops in here and no screen changes.
+class EmptyBillScanner implements BillScanner {
+  EmptyBillScanner({this.delay = Duration.zero});
 
   /// How long the "reading the bill" state is held for.
   final Duration delay;
-
-  final DateTime? _now;
 
   @override
   Future<ScannedBill> scan({
     required ItemKind kind,
     required CaptureSource source,
   }) async {
-    if (source == CaptureSource.manual) {
-      return const ScannedBill.empty();
-    }
-
     if (delay > Duration.zero) await Future<void>.delayed(delay);
-    final now = _now ?? DateTime.now();
-
-    if (kind == ItemKind.document) {
-      return ScannedBill(
-        title: 'Passport',
-        category: 'Identity',
-        store: 'Regional Passport Office, Chennai',
-        purchaseDate: DateTime(now.year - 4, 2, 4),
-        expiryDate: DateTime(now.year + 6, 2, 3),
-        rawText:
-            'Republic of India · Passport no. Z21 · place of issue Chennai · '
-            'date of issue 4 Feb ${now.year - 4} · date of expiry 3 Feb '
-            '${now.year + 6}',
-        note: '"Date of expiry" on the document',
-        imageName: 'passport_front.jpg',
-        source: source,
-        readFields: const <ScannedField>{
-          ScannedField.title,
-          ScannedField.category,
-          ScannedField.store,
-          ScannedField.purchaseDate,
-          ScannedField.expiryDate,
-        },
-      );
-    }
-
-    final purchase = DateTime(now.year, now.month, now.day);
-    return ScannedBill(
-      title: 'Samsung 1.5T Split AC',
-      category: normaliseCategory('Appliances'),
-      store: 'Sri Electronics, Coimbatore',
-      amount: 39699,
-      purchaseDate: purchase,
-      expiryDate: DateTime(purchase.year + 2, purchase.month, purchase.day),
-      rawText:
-          'SRI ELECTRONICS · GSTIN 33ABCDE1234F1Z5 · Coimbatore · '
-          'Split AC 1.5T 38,499.00 · Installation 1,200.00 · TOTAL 39,699.00 · '
-          'Invoice dt ${purchase.day}/${purchase.month}/${purchase.year} · '
-          'Warranty 24 months',
-      note: '"Warranty 24 months" on the bill',
-      imageName: 'bill_${purchase.day}${purchase.month}.jpg',
-      source: source,
-      readFields: const <ScannedField>{
-        ScannedField.title,
-        ScannedField.category,
-        ScannedField.store,
-        ScannedField.amount,
-        ScannedField.purchaseDate,
-        ScannedField.expiryDate,
-      },
-    );
+    return ScannedBill.empty(source: source);
   }
 }

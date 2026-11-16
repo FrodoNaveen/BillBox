@@ -7,7 +7,6 @@ import 'package:billbox/features/expenses/presentation/providers/expenses_provid
 import 'package:billbox/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:billbox/features/items/data/bill_item.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
-import 'package:billbox/features/items/data/sample_items.dart';
 import 'package:billbox/features/items/presentation/providers/items_provider.dart';
 import 'package:billbox/features/items/presentation/screens/add_item_screen.dart';
 import 'package:billbox/features/items/presentation/screens/item_detail_screen.dart';
@@ -187,18 +186,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ExpensesScreen), findsOneWidget);
-  });
-
-  testWidgets('a sample item cannot be edited or deleted', (tester) async {
-    await pumpDetail(tester, sampleBillItems.first.id);
-
-    expect(find.text(sampleBillItems.first.title), findsOneWidget);
-    expect(find.text('Edit'), findsNothing);
-    expect(find.byTooltip('Delete item'), findsNothing);
-    expect(
-      find.textContaining('sample items BillBox starts with'),
-      findsOneWidget,
-    );
   });
 
   testWidgets('an item that is gone says so instead of going blank', (

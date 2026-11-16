@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 /// What the dashboard widgets are handed.
 ///
 /// These are view models, not data: [ItemsProvider] builds them from the
-/// saved items (or from the sample catalogue while nothing is saved), so the
-/// tiles never need to know where a row came from.
+/// saved items, so the tiles never need to know where a row came from.
 
 /// How close an item is to its expiry date, which picks the badge colour.
 enum ExpiryUrgency { urgent, soon }

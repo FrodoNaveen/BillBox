@@ -152,14 +152,12 @@ void main() {
     expect(find.byType(ReminderSettingsScreen), findsOneWidget);
   });
 
-  testWidgets('the sample catalogue fills the tab before anything is saved', (
-    tester,
-  ) async {
+  testWidgets('a fresh install has nothing to list', (tester) async {
     await pumpReminders(tester);
 
-    expect(find.text('THIS WEEK'), findsOneWidget);
-    expect(find.text('Samsung 1.5T Split AC'), findsOneWidget);
-    expect(find.byType(ReminderRow), findsWidgets);
+    expect(find.byType(ReminderRow), findsNothing);
+    expect(find.text('THIS WEEK'), findsNothing);
+    expect(find.text('Nothing has a date yet'), findsOneWidget);
   });
 
   testWidgets('adding a bill is offered under the list', (tester) async {
@@ -177,6 +175,26 @@ void main() {
     tester,
   ) async {
     await itemsProvider.load();
+    await itemsProvider.add(
+      item(id: 'a', title: 'Samsung 1.5T Split AC', daysLeft: 6),
+    );
+    await itemsProvider.add(
+      item(
+        id: 'b',
+        title: 'Two-wheeler insurance',
+        daysLeft: 21,
+        category: 'Insurance',
+      ),
+    );
+    await itemsProvider.add(
+      item(
+        id: 'c',
+        title: 'Passport',
+        daysLeft: 400,
+        category: 'Identity',
+        kind: ItemKind.document,
+      ),
+    );
     await settingsProvider.load();
 
     await tester.binding.setSurfaceSize(const Size(390, 844));
@@ -197,8 +215,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Samples fill the tab, and the long titles sit in rows that must not
-    // overflow at phone width.
+    // The long titles sit in rows that must not overflow at phone width.
     expect(find.byType(ReminderRow), findsWidgets);
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();

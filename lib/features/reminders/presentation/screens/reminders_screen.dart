@@ -22,7 +22,7 @@ class RemindersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final items = context.watch<ItemsProvider>().visibleItems;
+    final items = context.watch<ItemsProvider>().items;
     final groups = groupByReminderWindow(items);
 
     return Scaffold(

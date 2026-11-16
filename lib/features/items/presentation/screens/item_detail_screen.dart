@@ -62,7 +62,6 @@ class ItemDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final item = context.watch<ItemsProvider>().itemById(itemId);
 
     // The item can go while this screen is open — a delete from here, or an
@@ -86,20 +85,16 @@ class ItemDetailScreen extends StatelessWidget {
             foregroundColor: Colors.white,
             flexibleSpace: FlexibleSpaceBar(background: BillPaper(item: item)),
             actions: [
-              if (!item.isSample)
-                PopupMenuButton<String>(
-                  tooltip: 'More options',
-                  onSelected: (choice) => choice == 'edit'
-                      ? _edit(context, item)
-                      : _confirmDelete(context, item),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem<String>(value: 'edit', child: Text('Edit')),
-                    PopupMenuItem<String>(
-                      value: 'delete',
-                      child: Text('Delete'),
-                    ),
-                  ],
-                ),
+              PopupMenuButton<String>(
+                tooltip: 'More options',
+                onSelected: (choice) => choice == 'edit'
+                    ? _edit(context, item)
+                    : _confirmDelete(context, item),
+                itemBuilder: (_) => const [
+                  PopupMenuItem<String>(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem<String>(value: 'delete', child: Text('Delete')),
+                ],
+              ),
             ],
           ),
           SliverPadding(
@@ -129,29 +124,15 @@ class ItemDetailScreen extends StatelessWidget {
                   const SizedBox(height: 14),
                   _ScannedTextPanel(text: item.scannedText),
                 ],
-                if (item.isSample) ...[
-                  const SizedBox(height: 14),
-                  Text(
-                    'This is one of the sample items BillBox starts with. '
-                    'Save a bill of your own and these make way for it.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.4,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
               ]),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: item.isSample
-          ? null
-          : _ActionBar(
-              onEdit: () => _edit(context, item),
-              onDelete: () => _confirmDelete(context, item),
-            ),
+      bottomNavigationBar: _ActionBar(
+        onEdit: () => _edit(context, item),
+        onDelete: () => _confirmDelete(context, item),
+      ),
     );
   }
 }

@@ -45,8 +45,6 @@ class AccountScreen extends StatelessWidget {
 
   Future<void> _export(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
-    // Only what the user actually saved: the sample catalogue is not theirs
-    // to export.
     final items = context.read<ItemsProvider>().items;
     if (items.isEmpty) {
       messenger.showSnackBar(

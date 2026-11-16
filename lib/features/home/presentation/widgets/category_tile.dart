@@ -46,10 +46,7 @@ class CategoryTile extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '${category.count}',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
               ),
             ],
           ),
