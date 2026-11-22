@@ -1,12 +1,15 @@
 import 'package:billbox/app.dart';
 import 'package:billbox/core/storage/key_value_store.dart';
 import 'package:billbox/features/auth/data/auth_local_data_source.dart';
+import 'package:billbox/features/account/presentation/screens/account_screen.dart';
 import 'package:billbox/features/auth/data/auth_repository.dart';
 import 'package:billbox/features/expenses/data/expenses_repository.dart';
 import 'package:billbox/features/items/data/items_repository.dart';
 import 'package:billbox/features/settings/data/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/silent_recogniser.dart';
 
 void main() {
   AuthRepository repositoryWith(InMemoryStore store) =>
@@ -18,6 +21,8 @@ void main() {
     settingsRepository: SettingsRepository(InMemoryStore()),
     itemsRepository: ItemsRepository(InMemoryStore()),
     expensesRepository: ExpensesRepository(InMemoryStore()),
+    // No microphone in a widget test.
+    recogniser: SilentRecogniser(),
   );
 
   /// The screens are designed for a phone, so test them at phone size
@@ -129,6 +134,20 @@ void main() {
 
     await tester.tap(find.byTooltip('Account'));
     await tester.pumpAndSettle();
+
+    // Log out sits at the bottom of the tab, below the fold on a phone.
+    await tester.scrollUntilVisible(
+      find.text('Log out'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(AccountScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Log out'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Log out'));

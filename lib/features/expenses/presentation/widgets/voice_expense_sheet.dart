@@ -17,24 +17,30 @@ Future<void> showVoiceExpenseSheet(
   BuildContext context, {
   DateTime? day,
   SpeechRecogniser? recogniser,
+  VoiceExpenseDraft? caught,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _VoiceExpenseSheet(day: day, recogniser: recogniser),
+    builder: (_) =>
+        _VoiceExpenseSheet(day: day, recogniser: recogniser, caught: caught),
   );
 }
 
 enum _Stage { starting, listening, heard, failed }
 
 class _VoiceExpenseSheet extends StatefulWidget {
-  const _VoiceExpenseSheet({this.day, this.recogniser});
+  const _VoiceExpenseSheet({this.day, this.recogniser, this.caught});
 
   final DateTime? day;
 
   /// Swapped in tests for one that does not need a microphone.
   final SpeechRecogniser? recogniser;
+
+  /// Already heard hands-free, so the sheet opens on the read-back instead
+  /// of asking the user to say it a second time.
+  final VoiceExpenseDraft? caught;
 
   @override
   State<_VoiceExpenseSheet> createState() => _VoiceExpenseSheetState();
@@ -53,7 +59,15 @@ class _VoiceExpenseSheetState extends State<_VoiceExpenseSheet> {
   @override
   void initState() {
     super.initState();
-    _listen();
+    final caught = widget.caught;
+    if (caught == null) {
+      _listen();
+      return;
+    }
+    // Heard by the hands-free loop: go straight to the read-back.
+    _draft = caught;
+    _words = caught.transcript;
+    _stage = _Stage.heard;
   }
 
   @override
