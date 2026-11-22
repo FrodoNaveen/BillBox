@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>BillBox listens so you can say what you spent, like "add 50 rupees for medicines". Your voice is processed on this phone and never uploaded.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>BillBox turns what you say into an expense on this phone. Recognition is done on-device and nothing is sent anywhere.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
