@@ -9,7 +9,10 @@ import 'package:billbox/features/settings/presentation/providers/settings_provid
 import 'package:billbox/features/settings/presentation/screens/profile_details_screen.dart';
 import 'package:billbox/features/settings/presentation/screens/reminder_settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:billbox/features/expenses/presentation/providers/hands_free_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/silent_recogniser.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -43,6 +46,9 @@ void main() {
           ),
           ChangeNotifierProvider<SettingsProvider>(
             create: (_) => SettingsProvider(repository: settings)..load(),
+          ),
+          ChangeNotifierProvider<HandsFreeProvider>(
+            create: (_) => HandsFreeProvider(recogniser: SilentRecogniser()),
           ),
         ],
         child: MaterialApp(

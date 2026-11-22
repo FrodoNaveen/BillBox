@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/privacy_note.dart';
+import '../../../expenses/data/speech_recogniser.dart';
+import '../../../expenses/presentation/providers/hands_free_provider.dart';
 import '../../../items/presentation/providers/items_provider.dart';
 import '../../../settings/data/data_export.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -114,6 +117,8 @@ class AccountScreen extends StatelessWidget {
             onTap: () => _open(context, const ReminderSettingsScreen()),
           ),
           const SizedBox(height: 10),
+          const _HandsFreeTile(),
+          const SizedBox(height: 10),
           const SettingsTile(
             icon: Icons.lock_outline_rounded,
             title: 'App lock',
@@ -208,6 +213,82 @@ class _ProfileCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The hands-free switch.
+///
+/// Says plainly what it costs — the microphone stays open while the app is on
+/// screen — and what it cannot do, since "works when the app is closed" is
+/// the thing people will assume.
+class _HandsFreeTile extends StatelessWidget {
+  const _HandsFreeTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final settings = context.watch<SettingsProvider>();
+    final handsFree = context.watch<HandsFreeProvider>();
+    final on = settings.settings.handsFreeEnabled;
+
+    final subtitle = switch (handsFree.problem) {
+      SpeechProblem.denied =>
+        'Microphone blocked — allow it in Settings to use this',
+      SpeechProblem.unavailable =>
+        'This phone has no offline speech recognition',
+      null =>
+        on
+            ? 'Listening while BillBox is open · uses battery'
+            : 'Say "Hey BillBox, add 50 rupees for medicines"',
+    };
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLowest,
+        border: Border.all(color: AppColors.cardBorder),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            on ? Icons.graphic_eq_rounded : Icons.mic_none_rounded,
+            size: 22,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hands-free logging',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.3,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: on,
+            onChanged: (next) =>
+                context.read<SettingsProvider>().setHandsFreeEnabled(next),
           ),
         ],
       ),

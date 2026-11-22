@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../account/presentation/screens/account_screen.dart';
+import '../../../expenses/presentation/providers/hands_free_provider.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../expenses/presentation/widgets/expense_sheet.dart';
 import '../../../expenses/presentation/widgets/voice_expense_sheet.dart';
 import '../../../items/presentation/screens/capture_bill_screen.dart';
 import '../../../reminders/presentation/screens/reminders_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../widgets/billbox_nav_bar.dart';
 
 /// Holds the four tabs and the bottom bar. Each tab keeps its own state, so
 /// switching back and forth does not rebuild the dashboard from scratch.
+///
+/// It also owns hands-free listening, because that has to work from any tab:
+/// it follows the saved setting, drops the microphone whenever the app leaves
+/// the foreground, and opens the read-back sheet when a command is heard.
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -18,8 +25,69 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   ShellTab _current = ShellTab.home;
+
+  /// True while the read-back sheet is already up, so a second command
+  /// cannot stack another sheet on top of it.
+  bool _isAsking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Settings are read after the first frame, so the toggle is applied once
+    // the saved value is actually known.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncHandsFree());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Neither platform lets a backgrounded app keep the microphone, so the
+  /// loop is stopped on the way out and picked up again on the way back.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final handsFree = context.read<HandsFreeProvider>();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        handsFree.resume();
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        handsFree.pause();
+    }
+  }
+
+  /// Keeps the listener in step with the saved setting.
+  Future<void> _syncHandsFree() async {
+    if (!mounted) return;
+    final settings = context.read<SettingsProvider>();
+    final handsFree = context.read<HandsFreeProvider>();
+    await handsFree.setEnabled(settings.settings.handsFreeEnabled);
+  }
+
+  /// Opens the read-back sheet on a command heard hands-free.
+  Future<void> _askAboutCaught() async {
+    if (_isAsking) return;
+    final handsFree = context.read<HandsFreeProvider>();
+    final draft = handsFree.takeCaught();
+    if (draft == null) return;
+
+    setState(() => _isAsking = true);
+    // Listening stops while the sheet is up, so the sheet's own microphone
+    // is not fighting the loop for the device.
+    await handsFree.pause();
+    if (mounted) await showVoiceExpenseSheet(context, caught: draft);
+    if (!mounted) return;
+
+    setState(() => _isAsking = false);
+    await handsFree.resume();
+  }
 
   void _select(ShellTab tab) {
     if (tab == _current) return;
@@ -80,6 +148,18 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    // A command caught while any tab was open: ask about it once this frame
+    // is done, since a sheet cannot be opened from inside build.
+    final settings = context.watch<SettingsProvider>().settings;
+    final handsFree = context.watch<HandsFreeProvider>();
+    if (handsFree.caught != null && !_isAsking) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _askAboutCaught());
+    }
+    if (settings.handsFreeEnabled != handsFree.isEnabled &&
+        handsFree.problem == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _syncHandsFree());
+    }
+
     return Scaffold(
       body: IndexedStack(
         index: ShellTab.values.indexOf(_current),

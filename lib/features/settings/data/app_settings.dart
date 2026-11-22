@@ -8,6 +8,7 @@ class AppSettings {
     Set<int>? leadDays,
     this.reminderHour = 9,
     this.reminderMinute = 0,
+    this.handsFreeEnabled = false,
   }) : leadDays = _cleanLeadDays(leadDays ?? defaultLeadDays);
 
   /// Master switch for every nudge.
@@ -19,6 +20,13 @@ class AppSettings {
   /// When the day's nudges are sent, on a 24-hour clock.
   final int reminderHour;
   final int reminderMinute;
+
+  /// Listen for "hey BillBox" while the app is open.
+  ///
+  /// Off by default, and deliberately so: it holds the microphone for as
+  /// long as the app is on screen, which costs battery and is not something
+  /// to switch on behind the user's back.
+  final bool handsFreeEnabled;
 
   /// The lead times the screen offers.
   static const List<int> leadDayOptions = <int>[30, 14, 7, 3, 1];
@@ -43,12 +51,14 @@ class AppSettings {
     Set<int>? leadDays,
     int? reminderHour,
     int? reminderMinute,
+    bool? handsFreeEnabled,
   }) {
     return AppSettings(
       remindersEnabled: remindersEnabled ?? this.remindersEnabled,
       leadDays: leadDays ?? this.leadDays,
       reminderHour: reminderHour ?? this.reminderHour,
       reminderMinute: reminderMinute ?? this.reminderMinute,
+      handsFreeEnabled: handsFreeEnabled ?? this.handsFreeEnabled,
     );
   }
 
@@ -64,6 +74,7 @@ class AppSettings {
     'leadDays': leadDays.toList(),
     'reminderHour': reminderHour,
     'reminderMinute': reminderMinute,
+    'handsFreeEnabled': handsFreeEnabled,
   };
 
   /// Every field falls back to its default, so a key added in a later version
@@ -77,6 +88,7 @@ class AppSettings {
           : null,
       reminderHour: _clamp(json['reminderHour'], 0, 23, 9),
       reminderMinute: _clamp(json['reminderMinute'], 0, 59, 0),
+      handsFreeEnabled: json['handsFreeEnabled'] as bool? ?? false,
     );
   }
 
@@ -92,6 +104,7 @@ class AppSettings {
         other.remindersEnabled == remindersEnabled &&
         other.reminderHour == reminderHour &&
         other.reminderMinute == reminderMinute &&
+        other.handsFreeEnabled == handsFreeEnabled &&
         other.leadDays.length == leadDays.length &&
         other.leadDays.containsAll(leadDays);
   }
@@ -101,6 +114,7 @@ class AppSettings {
     remindersEnabled,
     reminderHour,
     reminderMinute,
+    handsFreeEnabled,
     Object.hashAllUnordered(leadDays),
   );
 }

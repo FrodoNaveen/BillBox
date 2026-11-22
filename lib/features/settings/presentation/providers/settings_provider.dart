@@ -35,6 +35,9 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setReminderTime({required int hour, required int minute}) =>
       _apply(_settings.copyWith(reminderHour: hour, reminderMinute: minute));
 
+  Future<void> setHandsFreeEnabled(bool enabled) =>
+      _apply(_settings.copyWith(handsFreeEnabled: enabled));
+
   Future<void> resetToDefaults() => _apply(AppSettings());
 
   Future<void> _apply(AppSettings next) async {

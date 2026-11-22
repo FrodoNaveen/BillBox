@@ -7,7 +7,9 @@ import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/presentation/screens/signup_screen.dart';
 import 'features/expenses/data/expenses_repository.dart';
+import 'features/expenses/data/speech_recogniser.dart';
 import 'features/expenses/presentation/providers/expenses_provider.dart';
+import 'features/expenses/presentation/providers/hands_free_provider.dart';
 import 'features/items/data/items_repository.dart';
 import 'features/items/presentation/providers/items_provider.dart';
 import 'features/settings/data/settings_repository.dart';
@@ -21,12 +23,16 @@ class BillBoxApp extends StatelessWidget {
     required this.settingsRepository,
     required this.itemsRepository,
     required this.expensesRepository,
+    this.recogniser,
   });
 
   final AuthRepository authRepository;
   final SettingsRepository settingsRepository;
   final ItemsRepository itemsRepository;
   final ExpensesRepository expensesRepository;
+
+  /// Swapped in tests for one that does not need a microphone.
+  final SpeechRecogniser? recogniser;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +55,12 @@ class BillBoxApp extends StatelessWidget {
         ChangeNotifierProvider<ExpensesProvider>(
           create: (_) =>
               ExpensesProvider(repository: expensesRepository)..load(),
+        ),
+        // The shell turns this on when the saved setting says so.
+        ChangeNotifierProvider<HandsFreeProvider>(
+          create: (_) => HandsFreeProvider(
+            recogniser: recogniser ?? DeviceSpeechRecogniser(),
+          ),
         ),
       ],
       child: MaterialApp(
