@@ -8,6 +8,7 @@ import '../../data/expense_summary.dart';
 import '../providers/expenses_provider.dart';
 import '../widgets/expense_row.dart';
 import '../widgets/expense_sheet.dart';
+import '../widgets/voice_expense_sheet.dart';
 import '../widgets/month_calendar.dart';
 
 /// Daily spending: a month at a glance, then everything spent on the day that
@@ -45,11 +46,36 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final dayExpenses = provider.onDay(_selectedDay);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Spending')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showExpenseSheet(context, day: _selectedDay),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add expense'),
+      appBar: AppBar(
+        title: const Text('Spending'),
+        actions: [
+          IconButton(
+            onPressed: () => showVoiceExpenseSheet(context, day: _selectedDay),
+            icon: const Icon(Icons.mic_none_rounded),
+            tooltip: 'Add by voice',
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      // Two ways in, because the quick one has to be the easy one: the mic
+      // for "₹50 chai" on the move, the keyboard for anything fiddly.
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: 'voice',
+            onPressed: () => showVoiceExpenseSheet(context, day: _selectedDay),
+            tooltip: 'Add by voice',
+            child: const Icon(Icons.mic_rounded),
+          ),
+          const SizedBox(width: 12),
+          FloatingActionButton.extended(
+            heroTag: 'typed',
+            onPressed: () => showExpenseSheet(context, day: _selectedDay),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add expense'),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 90),

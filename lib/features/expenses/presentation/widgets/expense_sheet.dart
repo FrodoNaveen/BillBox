@@ -6,13 +6,16 @@ import '../../../../core/utils/formatting.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/choice_pill.dart';
 import '../../data/expense.dart';
+import '../../data/voice_expense_parser.dart';
 import '../providers/expenses_provider.dart';
 
-/// Opens the log-an-expense sheet. Pass [existing] to edit one instead.
+/// Opens the log-an-expense sheet. Pass [existing] to edit one instead, or
+/// [prefill] to open it on what a spoken phrase was understood to mean.
 Future<void> showExpenseSheet(
   BuildContext context, {
   DateTime? day,
   Expense? existing,
+  VoiceExpenseDraft? prefill,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -23,16 +26,19 @@ Future<void> showExpenseSheet(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
       ),
-      child: _ExpenseSheet(day: day, existing: existing),
+      child: _ExpenseSheet(day: day, existing: existing, prefill: prefill),
     ),
   );
 }
 
 class _ExpenseSheet extends StatefulWidget {
-  const _ExpenseSheet({this.day, this.existing});
+  const _ExpenseSheet({this.day, this.existing, this.prefill});
 
   final DateTime? day;
   final Expense? existing;
+
+  /// What was heard, when the sheet was opened to correct a spoken entry.
+  final VoiceExpenseDraft? prefill;
 
   @override
   State<_ExpenseSheet> createState() => _ExpenseSheetState();
@@ -53,12 +59,22 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
   void initState() {
     super.initState();
     final existing = widget.existing;
+    // An edit wins over a spoken draft, which wins over an empty sheet.
+    final spoken = widget.prefill;
+
     _amount = TextEditingController(
-      text: existing == null ? '' : existing.amount.round().toString(),
+      text: switch ((existing, spoken?.amount)) {
+        (final Expense e, _) => e.amount.round().toString(),
+        (null, final double amount) => amount.round().toString(),
+        _ => '',
+      },
     );
-    _note = TextEditingController(text: existing?.note ?? '');
-    _category = existing?.category ?? expenseCategories.first;
-    _date = dayOf(existing?.date ?? widget.day ?? DateTime.now());
+    _note = TextEditingController(text: existing?.note ?? spoken?.note ?? '');
+    _category =
+        existing?.category ?? spoken?.category ?? expenseCategories.first;
+    _date = dayOf(
+      existing?.date ?? spoken?.date ?? widget.day ?? DateTime.now(),
+    );
   }
 
   @override

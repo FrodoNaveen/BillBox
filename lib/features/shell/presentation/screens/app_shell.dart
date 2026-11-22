@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../account/presentation/screens/account_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../expenses/presentation/widgets/expense_sheet.dart';
+import '../../../expenses/presentation/widgets/voice_expense_sheet.dart';
 import '../../../items/presentation/screens/capture_bill_screen.dart';
 import '../../../reminders/presentation/screens/reminders_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
@@ -26,6 +27,9 @@ class _AppShellState extends State<AppShell> {
   }
 
   /// The add button covers both halves of the app, so it asks which.
+  ///
+  /// Voice sits at the top because it is the one people reach for daily: two
+  /// taps from any tab to "add 50 rupees for medicines".
   Future<void> _openAddSheet() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -34,6 +38,15 @@ class _AppShellState extends State<AppShell> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            ListTile(
+              leading: const Icon(Icons.mic_rounded),
+              title: const Text('Say what you spent'),
+              subtitle: const Text('"Add 50 rupees for medicines"'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                showVoiceExpenseSheet(context);
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
               title: const Text('Scan a bill'),
@@ -45,7 +58,7 @@ class _AppShellState extends State<AppShell> {
             ),
             ListTile(
               leading: const Icon(Icons.currency_rupee_rounded),
-              title: const Text('Log an expense'),
+              title: const Text('Type an expense'),
               subtitle: const Text('Add what you spent today'),
               onTap: () {
                 Navigator.of(sheetContext).pop();
